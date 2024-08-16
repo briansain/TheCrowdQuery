@@ -2,15 +2,15 @@
 using Akka.Hosting;
 using Akka.Logger.Serilog;
 using Akka.Persistence.Sql.Hosting;
-using Akka.Skeleton.Persistence.Actors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using LinqToDB;
 using CrowdQuery.Actors.Question;
 using CrowdQuery.Actors.Answer;
+using Akka.Event;
 
-namespace Akka.Skeleton.Persistence
+namespace CrowdQuery
 {
     internal class Program
     {
@@ -26,7 +26,7 @@ namespace Akka.Skeleton.Persistence
                     {
                         builder.ConfigureLoggers(configLoggers =>
                         {
-                            configLoggers.LogLevel = Event.LogLevel.DebugLevel;
+                            configLoggers.LogLevel = LogLevel.DebugLevel;
                             configLoggers.LogConfigOnStart = true;
                             configLoggers.ClearLoggers();
                             configLoggers.AddLogger<SerilogLogger>();

@@ -1,10 +1,9 @@
 ﻿using Akka.Actor;
 using Akka.Hosting;
-using Akka.Skeleton.Persistence.Actors;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace Akka.Skeleton.Persistence
+namespace CrowdQuery
 {
     internal class AkkaHostedService : IHostedService
     {
