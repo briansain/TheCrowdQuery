@@ -1,10 +1,5 @@
 ﻿using Akkatecture.Aggregates;
 using CrowdQuery.Actors.Question.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CrowdQuery.Actors.Question
 {

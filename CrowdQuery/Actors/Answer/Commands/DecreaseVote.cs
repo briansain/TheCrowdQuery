@@ -2,9 +2,9 @@
 
 namespace CrowdQuery.Actors.Answer.Commands
 {
-	public class DecreaseVote: Command<AnswerActor, AnswerId>
+	public class DecreaseVote : Command<AnswerActor, AnswerId>
 	{
-		public DecreaseVote(AnswerId answerId): base(answerId)
+		public DecreaseVote(AnswerId answerId) : base(answerId)
 		{
 
 		}

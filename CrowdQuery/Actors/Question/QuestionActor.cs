@@ -12,7 +12,7 @@ namespace CrowdQuery.Actors.Question
 		public override string PersistenceId => _persistenceId;
 		public ILoggingAdapter logging { get; set; }
 		private QuestionState _state { get; set; }
-		public QuestionActor(QuestionId aggregateId): base(aggregateId)
+		public QuestionActor(QuestionId aggregateId) : base(aggregateId)
 		{
 			logging = Context.GetLogger();
 		}
