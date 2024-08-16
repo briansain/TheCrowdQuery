@@ -1,0 +1,24 @@
+name: akka-skeleton
+
+services:
+  postgres:
+    restart: unless-stopped
+    container_name: postgres
+    image: 'postgres:15'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: akkaskeleton
+    volumes:
+      - data-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  data-volume:

@@ -1,0 +1,1 @@
+/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P sqlserverPassword123 -Q "create database akkaskeleton"
