@@ -1,4 +1,4 @@
-name: akka-skeleton
+name: crowdquery
 
 services:
   postgres:
@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
-      POSTGRES_DB: akkaskeleton
+      POSTGRES_DB: crowdquery
     volumes:
       - data-volume:/var/lib/postgresql/data
     ports:

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Akkatecture.Aggregates;
+using CrowdQuery.Actors.Question.Events;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace CrowdQuery.Actors.Question
 {
-	internal class QuestionState
+	public class QuestionState : AggregateState<QuestionActor, QuestionId>,
+		IApply<QuestionCreated>
 	{
 		public string Question { get; set; }
 		public List<string> Answers { get; set; }
@@ -20,6 +23,12 @@ namespace CrowdQuery.Actors.Question
 		{
 			Question = question;
 			Answers = answers;
+		}
+
+		public void Apply(QuestionCreated aggregateEvent)
+		{
+			Question = aggregateEvent.Question;
+			Answers = aggregateEvent.Answers;
 		}
 	}
 }

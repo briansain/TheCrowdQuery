@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Akkatecture.Aggregates;
+using Akkatecture.Commands;
 
 namespace CrowdQuery.Actors.Answer
 {
-	internal class AnswerManager
+	public class AnswerManager: AggregateManager<AnswerActor, AnswerId, Command<AnswerActor, AnswerId>>
 	{
 	}
 }

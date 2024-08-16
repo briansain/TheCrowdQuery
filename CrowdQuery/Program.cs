@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using LinqToDB;
+using CrowdQuery.Actors.Question;
+using CrowdQuery.Actors.Answer;
 
 namespace Akka.Skeleton.Persistence
 {
@@ -29,14 +31,14 @@ namespace Akka.Skeleton.Persistence
                             configLoggers.ClearLoggers();
                             configLoggers.AddLogger<SerilogLogger>();
                         })
-                        //.WithSqlPersistence("Host=localhost;Port=5432;database=akkaskeleton;username=postgres;password=postgrespassword;", ProviderName.PostgreSQL15)
+                        .WithSqlPersistence("Host=localhost;Port=5432;database=crowdquery;username=postgres;password=postgrespassword;", ProviderName.PostgreSQL15)
                         .WithActors((actorSystem, registry) =>
                         {
-                            var echoActor = actorSystem.ActorOf(Props.Create<EchoActor>(), "echo-actor");
-                            registry.Register<EchoActor>(echoActor);
+                            var questionManager = actorSystem.ActorOf(Props.Create<QuestionManager>(), "question-manager");
+                            registry.Register<QuestionManager>(questionManager);
 
-                            var statefulActor = actorSystem.ActorOf(Props.Create<StatefulActor>(), "stateful-actor");
-                            registry.Register<StatefulActor>(statefulActor);
+                            var answerManager = actorSystem.ActorOf(Props.Create<AnswerManager>(), "answer-manager");
+                            registry.Register<AnswerManager>(answerManager);
                         });
                     });
                     services.AddHostedService<AkkaHostedService>();

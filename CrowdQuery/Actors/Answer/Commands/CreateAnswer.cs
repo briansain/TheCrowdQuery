@@ -1,27 +1,17 @@
-﻿namespace CrowdQuery.Actors.Answer.Commands
+﻿using Akkatecture.Commands;
+using CrowdQuery.Actors.Question;
+
+namespace CrowdQuery.Actors.Answer.Commands
 {
-	internal class CreateAnswer
+	public class CreateAnswer : Command<AnswerActor, AnswerId>
 	{
-		public Guid QuestionId { get; set; }
-		public Guid AnswerId { get; set; }
+		public QuestionId QuestionId { get; set; }
 		public string Answer { get; set; }
-		public int Votes { get; set; }
 
-		public CreateAnswer()
+		public CreateAnswer(AnswerId aggregateId, QuestionId questionId, string answer): base(aggregateId)
 		{
-			Answer = string.Empty;
-			QuestionId = Guid.Empty;
-			AnswerId = Guid.Empty;
-			Votes = 0;
-		}
-
-		public CreateAnswer(string answer, Guid answerId, Guid questionId, int votes = 0)
-		{
-			Answer = answer;
-			AnswerId = answerId;
 			Answer = answer;
 			QuestionId = questionId;
-			Votes = votes;
 		}
 	}
 }
