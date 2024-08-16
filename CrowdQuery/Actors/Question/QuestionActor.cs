@@ -1,35 +1,29 @@
 ﻿using Akka.Event;
-using Akka.Persistence;
+using Akkatecture.Aggregates;
 using CrowdQuery.Actors.Question.Commands;
 using CrowdQuery.Actors.Question.Events;
 
 namespace CrowdQuery.Actors.Question
 {
-	//CONVERT TO AKKATECTURE
-	public class QuestionActor : ReceivePersistentActor
+	public class QuestionActor : AggregateRoot<QuestionActor, QuestionId, QuestionState>,
+		IExecute<CreateQuestion>
 	{
 		private readonly string _persistenceId;
 		public override string PersistenceId => _persistenceId;
 		public ILoggingAdapter logging { get; set; }
 		private QuestionState _state { get; set; }
-		public QuestionActor(string persistenceId)
+		public QuestionActor(QuestionId aggregateId) : base(aggregateId)
 		{
-			_persistenceId = persistenceId;
 			logging = Context.GetLogger();
-			_state = new QuestionState();
-			Command<CreateQuestion>(msg =>
-			{
-				// SANATIZE THE QUESTION
-				logging.Info($"Creating new question: {msg.Question}");
-				var evnt = new QuestionCreated(msg.QuestionId, msg.Question, msg.Answers);
-				Persist(evnt, HandleQuestionCreated);
-			});
-			Recover<QuestionCreated>(HandleQuestionCreated);
 		}
 
-		public void HandleQuestionCreated(QuestionCreated evnt)
+		public bool Execute(CreateQuestion command)
 		{
-			_state = new QuestionState(evnt.Question, evnt.Answers);
+			// SANATIZE THE QUESTION
+			logging.Info($"Creating new question: {command.Question}");
+			var evnt = new QuestionCreated(command.AggregateId, command.Question, command.Answers);
+			Emit(evnt);
+			return true;
 		}
 	}
 }

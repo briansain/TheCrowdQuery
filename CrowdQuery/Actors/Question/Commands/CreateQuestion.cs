@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Akkatecture.Commands;
 
 namespace CrowdQuery.Actors.Question.Commands
 {
-	public class CreateQuestion
+	public class CreateQuestion : Command<QuestionActor, QuestionId>
 	{
-		public Guid QuestionId { get; set; }
 		public string Question { get; set; }
 		public List<string> Answers { get; set; }
 
-		public CreateQuestion(Guid questionId, string question, List<string> answers)
+		public CreateQuestion(QuestionId aggregateId, string question, List<string> answers) : base(aggregateId)
 		{
-			QuestionId = questionId;
 			Question = question;
 			Answers = answers;
 		}
-    }
+	}
 }

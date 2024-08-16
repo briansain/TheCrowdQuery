@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Akkatecture.Aggregates;
 
 namespace CrowdQuery.Actors.Question.Events
 {
-	public class QuestionCreated
+	public class QuestionCreated : AggregateEvent<QuestionActor, QuestionId>
 	{
-		public Guid QuestionId { get; set; }
+		public QuestionId QuestionId { get; set; }
 		public string Question { get; set; }
 		public List<string> Answers { get; set; }
 
-		public QuestionCreated(Guid questionId, string question, List<string> answers)
+		public QuestionCreated(QuestionId questionId, string question, List<string> answers)
 		{
 			QuestionId = questionId;
 			Question = question;
