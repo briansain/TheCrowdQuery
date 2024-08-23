@@ -1,6 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Akkatecture.Aggregates;
+using Akkatecture.TestFixture.Extensions;
 using CrowdQuery.Actors.Question;
 using CrowdQuery.Actors.Question.Commands;
 using CrowdQuery.Actors.Question.Events;
@@ -17,18 +18,14 @@ namespace CrowdQuery.Tests.QuestionAggregate
 	public class QuestionAggregateTests : TestKit
 	{
 		[Fact]
-		public void DoesManagerCreateChild()
+		public void QuestionActor_CommandCreateQuestion_ProducesQuestionCreated()
 		{
-			var testProbe = CreateTestProbe();
-			Sys.EventStream.Subscribe(testProbe, typeof(IDomainEvent<QuestionActor, QuestionId, QuestionCreated>));
-			var questionManager = Sys.ActorOf(Props.Create<QuestionManager>(), "question-manager-test");
 			var questionId = QuestionId.New;
-			var createQuestion = new CreateQuestion(questionId, "Are you there?", new List<string>() { "Yes", "No" });
-			questionManager.Tell(createQuestion);
-			ExpectNoMsg();
 
-			// might need to do await assert
-			testProbe.ExpectMsg<IDomainEvent<QuestionActor, QuestionId, QuestionCreated>>();
+			this.FixtureFor<QuestionActor, QuestionId>(questionId)
+				.GivenNothing()
+				.When(new CreateQuestion(questionId, "Are you there?", new List<string>() { "Yes", "No" }))
+				.ThenExpectDomainEvent((IDomainEvent<QuestionActor, QuestionId, QuestionCreated> evnt) => evnt.AggregateEvent.Question.Equals("Are you there?"));
 		}
 	}
 }

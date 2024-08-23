@@ -23,7 +23,7 @@ namespace CrowdQuery.Actors.Question
 
 		public bool Execute(CreateQuestion command)
 		{
-			// SANATIZE THE QUESTION
+			// SANATIZE THE QUESTION FOR SQL INJECTION AND SILLY HACKERS
 			logging.Info($"Creating new question: {command.Question}");
 			var evnt = new QuestionCreated(command.AggregateId, command.Question, command.Answers);
 			Emit(evnt);
