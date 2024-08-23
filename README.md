@@ -13,6 +13,7 @@
 ### To Do
 - [X] Create readme
 - [ ] Handle scenario when saga dies
-- [ ] Create Unit Tests
+- [X] Create Aggregate Unit Tests
+- [ ] Create Saga Unit Tests
 
 ## Version 0.2.0
