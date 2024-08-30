@@ -3,7 +3,6 @@ using Akka.Event;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
 using Akka.Persistence.Sql.Hosting;
-using CrowdQuery.Actors.Answer;
 using CrowdQuery.Actors.Question;
 using LinqToDB;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,9 +35,6 @@ namespace CrowdQuery
 						{
 							var questionManager = actorSystem.ActorOf(Props.Create<QuestionManager>(), "question-manager");
 							registry.Register<QuestionManager>(questionManager);
-
-							var answerManager = actorSystem.ActorOf(Props.Create<AnswerManager>(), "answer-manager");
-							registry.Register<AnswerManager>(answerManager);
 						});
 					});
 					services.AddHostedService<AkkaHostedService>();

@@ -1,4 +1,4 @@
-name: akka-skeleton
+name: crowdquery
 
 services:
   sqlserver:

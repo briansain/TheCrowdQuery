@@ -11,9 +11,9 @@ namespace CrowdQuery.Actors.Specification
 	{
 		protected override IEnumerable<string> IsNotSatisfiedBecause(bool aggregate)
 		{
-			if (!aggregate)
+			if (aggregate)
 			{
-				yield return "Aggregate is not new";
+				yield return "Aggregate is new";
 			}
 		}
 	}
