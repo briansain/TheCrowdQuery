@@ -1,12 +1,6 @@
 ﻿using Akkatecture.Specifications;
-using CrowdQuery.Actors.Question;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CrowdQuery.Actors.Specification
+namespace CrowdQuery.Actors.Question.Specification
 {
 	internal class ContainsAnswerSpecification : Specification<string>
 	{
@@ -17,7 +11,7 @@ namespace CrowdQuery.Actors.Specification
 		}
 		protected override IEnumerable<string> IsNotSatisfiedBecause(string answer)
 		{
-			if (!_questionState.Answers.ContainsKey(answer))
+			if (!_questionState.AnswerVotes.ContainsKey(answer))
 			{
 				yield return $"Answers does not contain {answer}";
 			}

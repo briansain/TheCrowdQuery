@@ -1,13 +1,6 @@
-﻿using Akkatecture.Commands;
-using Akkatecture.Specifications;
-using CrowdQuery.Actors.Question;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Akkatecture.Specifications;
 
-namespace CrowdQuery.Actors.Specification
+namespace CrowdQuery.Actors.Question.Specification
 {
 	public class AnswerHasVotesSpecification : Specification<string>
 	{
@@ -19,7 +12,7 @@ namespace CrowdQuery.Actors.Specification
 
 		protected override IEnumerable<string> IsNotSatisfiedBecause(string answer)
 		{
-			if (_questionState.Answers.ContainsKey(answer) && _questionState.Answers[answer] == 0)
+			if (_questionState.AnswerVotes.ContainsKey(answer) && _questionState.AnswerVotes[answer] == 0)
 			{
 				yield return $"Answer must have votes before decreasing the count";
 			}

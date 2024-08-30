@@ -1,11 +1,6 @@
 ﻿using Akkatecture.Specifications;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CrowdQuery.Actors.Specification
+namespace CrowdQuery.Actors.Question.Specification
 {
 	public class IsNotNewSpecification : Specification<bool>
 	{

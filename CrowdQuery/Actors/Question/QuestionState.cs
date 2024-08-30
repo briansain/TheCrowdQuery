@@ -8,35 +8,43 @@ namespace CrowdQuery.Actors.Question
 		IApply<AnswerVoteIncreased>,
 		IApply<AnswerVoteDecreased>
 	{
-		public string Question { get; set; }
-		public Dictionary<string, int> Answers { get; set; }
+		public string Question { get; private set; }
+		public Dictionary<string, long> AnswerVotes { get; private set; }
 
 		public QuestionState()
 		{
-			Answers = new Dictionary<string, int>();
+			AnswerVotes = new Dictionary<string, long>();
 			Question = string.Empty;
 		}
 
-		public QuestionState(string question, Dictionary<string, int> answers)
+		public QuestionState(string question, Dictionary<string, long> answers)
 		{
 			Question = question;
-			Answers = answers;
+			AnswerVotes = answers;
 		}
 
 		public void Apply(QuestionCreated aggregateEvent)
 		{
 			Question = aggregateEvent.Question;
-			Answers = aggregateEvent.Answers.ToDictionary(x => x, y => 0);
+			AnswerVotes = aggregateEvent.Answers.ToDictionary(x => x, y => (long)0);
 		}
 
 		public void Apply(AnswerVoteIncreased aggregateEvent)
 		{
-			Answers[aggregateEvent.Answer]++;
+			AnswerVotes[aggregateEvent.Answer]++;
 		}
 
 		public void Apply(AnswerVoteDecreased aggregateEvent)
 		{
-			Answers[aggregateEvent.Answer]--;
+			AnswerVotes[aggregateEvent.Answer]--;
+		}
+
+		public QuestionState DeepCopy()
+		{
+			var newState = new QuestionState();
+			newState.Question = Question;
+			newState.AnswerVotes = new Dictionary<string, long>(AnswerVotes);
+			return newState;
 		}
 	}
 }

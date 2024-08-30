@@ -4,13 +4,16 @@ using Akkatecture.Aggregates;
 using Akkatecture.Aggregates.CommandResults;
 using CrowdQuery.Actors.Question.Commands;
 using CrowdQuery.Actors.Question.Events;
+using CrowdQuery.Actors.Question.Query;
 using CrowdQuery.Actors.Question.Specification;
 
 namespace CrowdQuery.Actors.Question
 {
-    public class QuestionActor : AggregateRoot<QuestionActor, QuestionId, QuestionState>,
+	public class QuestionActor : AggregateRoot<QuestionActor, QuestionId, QuestionState>,
 		IExecute<CreateQuestion>,
-		IExecute<IncreaseAnswerVote>, IExecute<DecreaseAnswerVote>
+		IExecute<IncreaseAnswerVote>,
+		IExecute<DecreaseAnswerVote>,
+		IExecute<QueryQuestionState>
 	{
 		private static IsNewSpecification IsNewSpec => new IsNewSpecification();
 		private static IsNotNewSpecification IsNotNewSpec => new IsNotNewSpecification();
@@ -22,16 +25,16 @@ namespace CrowdQuery.Actors.Question
 
 		public bool Execute(CreateQuestion command)
 		{
-			if (IsNewSpec.IsSatisfiedBy(base.IsNew))
+			if (IsNewSpec.IsSatisfiedBy(IsNew))
 			{
 				// SANATIZE THE QUESTION FOR SQL INJECTION AND SILLY HACKERS
 				logging.Info($"Creating new question: {command.Question}");
 				var evnt = new QuestionCreated(command.AggregateId, command.Question, command.Answers);
-				base.Emit(evnt);
+				Emit(evnt);
 				return true;
 			}
 
-			Sender.Tell(CommandResult.FailWith(command, IsNewSpec.WhyIsNotSatisfiedBy(base.IsNew)), Self);
+			Sender.Tell(CommandResult.FailWith(command, IsNewSpec.WhyIsNotSatisfiedBy(IsNew)), Self);
 			return true;
 		}
 
@@ -72,6 +75,12 @@ namespace CrowdQuery.Actors.Question
 				errors.AddRange(hasVotesSpec.WhyIsNotSatisfiedBy(command.Answer));
 				Sender.Tell(CommandResult.FailWith(command, errors));
 			}
+			return true;
+		}
+
+		public bool Execute(QueryQuestionState command)
+		{
+			Sender.Tell(State.DeepCopy());
 			return true;
 		}
 	}
