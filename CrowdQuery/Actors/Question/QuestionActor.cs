@@ -4,11 +4,11 @@ using Akkatecture.Aggregates;
 using Akkatecture.Aggregates.CommandResults;
 using CrowdQuery.Actors.Question.Commands;
 using CrowdQuery.Actors.Question.Events;
-using CrowdQuery.Actors.Specification;
+using CrowdQuery.Actors.Question.Specification;
 
 namespace CrowdQuery.Actors.Question
 {
-	public class QuestionActor : AggregateRoot<QuestionActor, QuestionId, QuestionState>,
+    public class QuestionActor : AggregateRoot<QuestionActor, QuestionId, QuestionState>,
 		IExecute<CreateQuestion>,
 		IExecute<IncreaseAnswerVote>, IExecute<DecreaseAnswerVote>
 	{
