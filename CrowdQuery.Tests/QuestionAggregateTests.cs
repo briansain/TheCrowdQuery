@@ -13,7 +13,7 @@ namespace CrowdQuery.Tests
 	{
 		private readonly QuestionId QuestionId = QuestionId.New;
 		[Fact]
-		public void QuestionActor_CommandCreateQuestion_EmitsQuestionCreated()
+		public void Command_CreateQuestion_EmitsQuestionCreated()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
 				.GivenNothing()
@@ -22,25 +22,25 @@ namespace CrowdQuery.Tests
 		}
 
 		[Fact]
-		public void QuestionActor_CommandCreateQuestion_FailureIsNotNew()
+		public void Command_CreateQuestion_FailureIsNotNew()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", new List<string>() { "Yes", "No" }))
+				.Given(new QuestionCreated("Are you there?", new List<string>() { "Yes", "No" }))
 				.When(new CreateQuestion(QuestionId, "Hello World", ["Yes", "No"]))
 				.ThenExpectReply<FailedCommandResult>(x => x.Errors.Contains("Aggregate is not new"));
 		}
 
 		[Fact]
-		public void QuestionActor_CommandIncreaseAnswerVote_EmitAnswerVoteIncreased()
+		public void Command_IncreaseAnswerVote_EmitAnswerVoteIncreased()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", ["Yes", "No"]))
+				.Given(new QuestionCreated("Are you there?", ["Yes", "No"]))
 				.When(new IncreaseAnswerVote(QuestionId, "Yes"))
 				.ThenExpectDomainEvent<AnswerVoteIncreased>(x => x.AggregateEvent.Answer == "Yes");
 		}
 
 		[Fact]
-		public void QuestionActor_CommandIncreaseAnswerVote_FailureIsNew()
+		public void Command_IncreaseAnswerVote_FailureIsNew()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
 				.GivenNothing()
@@ -49,25 +49,25 @@ namespace CrowdQuery.Tests
 		}
 
 		[Fact]
-		public void QuestionActor_CommandIncreaseAnswerVote_NotContainsAnswer()
+		public void Command_IncreaseAnswerVote_NotContainsAnswer()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", ["Yes", "No"]))
+				.Given(new QuestionCreated("Are you there?", ["Yes", "No"]))
 				.When(new IncreaseAnswerVote(QuestionId, "Why?"))
 				.ThenExpectReply<FailedCommandResult>(x => x.Errors.Contains("Answers does not contain Why?"));
 		}
 
 		[Fact]
-		public void QuestionActor_CommandDecreaseAnswerVote_EmitAnswerVoteDecreased()
+		public void Command_DecreaseAnswerVote_EmitAnswerVoteDecreased()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", ["Yes", "No"]), new AnswerVoteIncreased("Yes"))
+				.Given(new QuestionCreated("Are you there?", ["Yes", "No"]), new AnswerVoteIncreased("Yes"))
 				.When(new DecreaseAnswerVote(QuestionId, "Yes"))
 				.ThenExpectDomainEvent<AnswerVoteDecreased>(x => x.AggregateEvent.Answer == "Yes");
 		}
 
 		[Fact]
-		public void QuestionActor_CommandDecreaseAnswerVote_FailureIsNew()
+		public void Command_DecreaseAnswerVote_FailureIsNew()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
 				.GivenNothing()
@@ -76,19 +76,19 @@ namespace CrowdQuery.Tests
 		}
 
 		[Fact]
-		public void QuestionActor_CommandDecreaseAnswerVote_NotContainsAnswer()
+		public void Command_DecreaseAnswerVote_NotContainsAnswer()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", ["Yes", "No"]))
+				.Given(new QuestionCreated("Are you there?", ["Yes", "No"]))
 				.When(new DecreaseAnswerVote(QuestionId, "Why?"))
 				.ThenExpectReply<FailedCommandResult>(x => x.Errors.Contains("Answers does not contain Why?"));
 		}
 
 		[Fact]
-		public void QuestionActor_CommandDecreaseAnswerVote_NotHasVotes()
+		public void Command_DecreaseAnswerVote_NotHasVotes()
 		{
 			this.FixtureFor<QuestionActor, QuestionId>(QuestionId)
-				.Given(new QuestionCreated(QuestionId, "Are you there?", ["Yes", "No"]))
+				.Given(new QuestionCreated("Are you there?", ["Yes", "No"]))
 				.When(new DecreaseAnswerVote(QuestionId, "Yes"))
 				.ThenExpectReply<FailedCommandResult>(x => x.Errors.Contains("Answer must have votes before decreasing the count"));
 
