@@ -1,7 +1,6 @@
 # CrowdQuery
 
-## To Do
-- [ ] Create better readme
-- [ ] Create runable unit tests
-- [ ] Create web api
-- [ ] Create cluster to connect actor system and api
+- [CrowdQuery](#crowdquery)
+  - [What Is This?](#what-is-this)
+
+## What Is This?
