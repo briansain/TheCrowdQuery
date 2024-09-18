@@ -1,0 +1,50 @@
+﻿@page "/question/add"
+@rendermode InteractiveServer
+
+<PageTitle>Add Question</PageTitle>
+
+
+<MudPaper class="pa-16 ma-10 d-flex flex-wrap">
+    <MudText Typo="Typo.h3" style="flex-basis:100%">What's your question?</MudText>
+    <MudTextField class="flex-basis-100" @bind-Value="question" Label="Question" Variant="Variant.Outlined">
+    </MudTextField>
+    @for (var i = 0; i < answers.Count; i++)
+    {
+        int index = i;
+        <div class="d-flex flex-wrap pa-6">
+            <MudTextField @ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]" Label="@($"Answer")"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="_ => answers.RemoveAt(index)" />
+            <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="AddAnswer" />
+        </div>
+    }
+    <pre>@(string.Join(", ", answers))</pre>
+</MudPaper>
+
+
+@code {
+    private List<Action> actionsToRun = new List<Action>();
+    private Dictionary<int, MudTextField<string>> answerElements = new Dictionary<int, MudTextField<string>>();
+    string question = string.Empty;
+    List<string> answers = new List<string>() {""};
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("OnInitialized");
+    }
+
+    protected override void OnAfterRender(bool isFirstRender)
+    {
+        foreach(var action in actionsToRun)
+        {
+            action.Invoke();
+        }
+        actionsToRun.Clear();
+    }
+
+    private void AddAnswer()
+    {
+        answers.Add(string.Empty);
+        Console.WriteLine($"Count {answerElements.Count}");
+        actionsToRun.Add(() => answerElements[answers.Count - 1].FocusAsync());
+    }
+}
