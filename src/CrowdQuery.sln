@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34616.47
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{70B3DE7C-F9B8-4AD1-A0F4-EB8287B42853}"
+	ProjectSection(SolutionItems) = preProject
+		docker\postgres.docker-compose = docker\postgres.docker-compose
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.Akka", "CrowdQuery.Akka\CrowdQuery.Akka.csproj", "{141015E5-B155-484C-BFE4-655834AE7BE6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.Akka.Tests", "CrowdQuery.Akka.Tests\CrowdQuery.Akka.Tests.csproj", "{2FC18F8F-4D48-4F18-A0B9-834799526167}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdQuery.Blazor", "CrowdQuery.Blazor\CrowdQuery.Blazor.csproj", "{1BE633B8-711B-4960-9C3D-62AC4BEA5451}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdQuery.Messages", "CrowdQuery.Messages\CrowdQuery.Messages.csproj", "{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{141015E5-B155-484C-BFE4-655834AE7BE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{141015E5-B155-484C-BFE4-655834AE7BE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{141015E5-B155-484C-BFE4-655834AE7BE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{141015E5-B155-484C-BFE4-655834AE7BE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FC18F8F-4D48-4F18-A0B9-834799526167}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FC18F8F-4D48-4F18-A0B9-834799526167}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FC18F8F-4D48-4F18-A0B9-834799526167}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FC18F8F-4D48-4F18-A0B9-834799526167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {50A50C95-A9F5-4E00-8E08-6943C620D85C}
+	EndGlobalSection
+EndGlobal
