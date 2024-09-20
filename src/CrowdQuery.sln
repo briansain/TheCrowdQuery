@@ -8,9 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{70B3DE
 		docker\postgres.docker-compose = docker\postgres.docker-compose
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.Akka", "CrowdQuery.Akka\CrowdQuery.Akka.csproj", "{141015E5-B155-484C-BFE4-655834AE7BE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.AS", "CrowdQuery.AS\CrowdQuery.AS.csproj", "{141015E5-B155-484C-BFE4-655834AE7BE6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.Akka.Tests", "CrowdQuery.Akka.Tests\CrowdQuery.Akka.Tests.csproj", "{2FC18F8F-4D48-4F18-A0B9-834799526167}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.AS.Tests", "CrowdQuery.AS.Tests\CrowdQuery.AS.Tests.csproj", "{2FC18F8F-4D48-4F18-A0B9-834799526167}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdQuery.Blazor", "CrowdQuery.Blazor\CrowdQuery.Blazor.csproj", "{1BE633B8-711B-4960-9C3D-62AC4BEA5451}"
 EndProject

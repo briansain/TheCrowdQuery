@@ -1,8 +1,10 @@
 ﻿@page "/question/add"
+@inject IRequiredActor<QuestionManager> _questionManager
+@inject ILogger<AddQuestion> _logger
 @rendermode InteractiveServer
 
 <PageTitle>Add Question</PageTitle>
-
+<h1>Loading -> @(isLoading ? "true": "false")</h1>
 <MudPaper class="pa-16 ma-10 d-flex flex-wrap flex-column">
     <MudText Typo="Typo.h3" style="border:solid">What's your question?</MudText>
     <MudTextField style="border:solid" @bind-Value="question" Label="Question" Variant="Variant.Outlined">
@@ -12,7 +14,7 @@
         {
             int index = i;
             <div class="pa-5 flex-25">
-                <MudTextField @ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]"
+                <MudTextField Counter="256" Validation="(string ans) => ValidateAnswers(ans)" @ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]"
                     Label="@($"Answer")" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
                     OnClick="_ => answers.RemoveAt(index)" />
@@ -20,18 +22,27 @@
             </div>
         }
     </div>
+    <div class="d-flex justify-end">
+        <MudButton class="ma-1" Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+        <MudButton class="ma-1" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+    </div>
 </MudPaper>
 
 
 @code {
+    private bool isLoading = true;
+    private IActorRef questionManager = ActorRefs.Nobody;
+    [Inject] public required IDialogService DiaglogService {get;set;}
     private List<Action> actionsToRun = new List<Action>();
     private Dictionary<int, MudTextField<string>> answerElements = new Dictionary<int, MudTextField<string>>();
     string question = string.Empty;
     List<string> answers = new List<string>() { "" };
 
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
-        Console.WriteLine("OnInitialized");
+        _logger.LogDebug("OnInitializedAsync");
+        questionManager = await _questionManager.GetAsync();
+        isLoading = questionManager.IsNobody();
     }
 
     protected override void OnAfterRender(bool isFirstRender)
@@ -46,7 +57,32 @@
     private void AddAnswer()
     {
         answers.Add(string.Empty);
-        Console.WriteLine($"Count {answerElements.Count}");
+        _logger.LogDebug($"Count {answerElements.Count}");
         actionsToRun.Add(() => answerElements[answers.Count - 1].FocusAsync());
+    }
+
+    private async void Cancel()
+    {
+        _logger.LogDebug("Cancel");
+        bool? result = await DiaglogService.ShowMessageBox("Warning", "Are you sure you want to cancel?", "Yes", "No");
+        if (result == null || result == false)
+        {
+            _logger.LogDebug("falsey");
+            return;
+        }
+        _logger.LogDebug("truthy");
+
+        //navigate to homepage
+    }
+
+    private async void Submit()
+    {
+        var command = new CreateQuestion(QuestionId.New, question, answers);
+    }
+
+    private void ValidateAnswers(object i)
+    {
+        _logger.LogDebug($"ValidateAnswers");
+        
     }
 }
