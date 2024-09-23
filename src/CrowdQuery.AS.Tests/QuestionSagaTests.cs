@@ -1,8 +1,11 @@
 ﻿using Akka.Actor;
+using Akka.Configuration;
+using Akka.DistributedData;
 using Akka.Persistence;
 using Akka.TestKit;
 using Akka.TestKit.Xunit2;
 using Akkatecture.Aggregates;
+using CrowdQuery.AS.Actors;
 using CrowdQuery.AS.Actors.Question;
 using CrowdQuery.AS.Actors.Question.Events;
 using CrowdQuery.AS.Sagas.QuestionSaga;
@@ -19,7 +22,10 @@ namespace CrowdQuery.AS.Tests
 	{
 		private readonly TestProbe _testProbe;
 		private readonly TestProbe _aggregateEventTestProbe;
-		public QuestionSagaTests()
+		public QuestionSagaTests() : base(ConfigurationFactory.ParseString(
+			@"	akka.loglevel = DEBUG
+            	akka.actor.provider = cluster")
+			.WithFallback(DistributedData.DefaultConfig()))
 		{
 			_testProbe = CreateTestProbe();
 			_aggregateEventTestProbe = CreateTestProbe("aggregate-event-test-probe");
@@ -152,6 +158,20 @@ namespace CrowdQuery.AS.Tests
 			AwaitAssert(
 				() => _testProbe.ExpectMsg<QuestionStateUpdated>()
 			);
+		}
+
+				[Fact]
+		public void SubscribesTo_QuestionCreated_UpdatesDistributedData()
+		{
+			var questionSaga = Sys.ActorOf(Props.Create<QuestionSaga>(), "question-saga");
+			var replicator = DistributedData.Get(Sys).Replicator;
+			replicator.Tell(Dsl.Subscribe(AllQuestionsActor.AllQuestionsBasicKey, _testProbe));
+
+			var questionCreated = new QuestionCreated("Are you there?", ["Yes", "No"]);
+			questionSaga.Tell(new DomainEvent<QuestionActor, QuestionId, QuestionCreated>(
+									QuestionId.New, questionCreated, new Metadata(), DateTimeOffset.Now, 1));
+
+			_testProbe.ExpectMsg<Changed>();
 		}
 
 		private void InitializeEventJournal(QuestionSagaId aggregateId, params IAggregateEvent<QuestionSaga, QuestionSagaId>[] events)

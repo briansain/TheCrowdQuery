@@ -1,8 +1,21 @@
 ﻿@page "/"
+@inject IRequiredActor<AllQuestionsActor> allQuestionsActor
+@inject ILogger<Home> _logger;
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-<MudText Typo="Typo.h1">Hello World123</MudText>
-Welcome to your new app.
-<MudText>Welcome to your new app.</MudText>
+<MudText Type="h1">Welcome to TheCrowdQuery!</MudText>
+@*loading stuff....*@
+@*done loading stuff*@
+
+@code {
+    private IActorRef _allQuestionsActor = ActorRefs.Nobody;
+    private bool isLoaded;
+    protected async override Task OnInitializedAsync()
+    {
+        _logger.LogDebug("Starting OnInitializedAsync");
+        _allQuestionsActor = await allQuestionsActor.GetAsync();
+        var response = await _allQuestionsActor.Ask<List<BasicQuestionState>>(new RequestBasicQuestionState());
+        _logger.LogDebug($"Received response from AllQuestionsActor: {string.Join(", ", response.Select(r => r.question))}");
+    }
+}

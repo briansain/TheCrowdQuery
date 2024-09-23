@@ -28,6 +28,11 @@ namespace CrowdQuery.AS.Actors
 			});
 		}
 
+		public static Props PropsFor()
+		{
+			return Props.Create<AllQuestionsActor>();
+		}
+
 		public bool HandleGetResponse(IGetResponse response)
 		{
 			switch (response)

@@ -31,6 +31,7 @@ namespace CrowdQuery.AS.Actors.Question
 				logging.Info($"Creating new question: {command.Question}");
 				var evnt = new QuestionCreated(command.Question, command.Answers);
 				Emit(evnt);
+				Sender.Tell(CommandResult.SucceedWith(command));
 				return true;
 			}
 

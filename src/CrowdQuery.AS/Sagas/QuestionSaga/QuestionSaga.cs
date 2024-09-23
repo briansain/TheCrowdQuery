@@ -1,15 +1,19 @@
 ﻿using Akka.Actor;
+using Akka.Cluster;
+using Akka.DistributedData;
 using Akka.Event;
 using Akka.Streams;
 using Akka.Streams.Dsl;
 using Akkatecture.Aggregates;
 using Akkatecture.Sagas;
 using Akkatecture.Sagas.AggregateSaga;
+using CrowdQuery.AS.Actors;
 using CrowdQuery.AS.Actors.Question;
 using CrowdQuery.AS.Actors.Question.Events;
 using CrowdQuery.AS.Sagas.QuestionSaga.Commands;
 using CrowdQuery.AS.Sagas.QuestionSaga.Events;
 using CrowdQuery.AS.Sagas.QuestionSaga.ResponseModels;
+using CrowdQuery.Messages;
 using AnswerVoteDecreased = CrowdQuery.AS.Actors.Question.Events.AnswerVoteDecreased;
 using AnswerVoteIncreased = CrowdQuery.AS.Actors.Question.Events.AnswerVoteIncreased;
 
@@ -25,6 +29,8 @@ namespace CrowdQuery.AS.Sagas.QuestionSaga
 		private IActorRef _debouncer = ActorRefs.Nobody;
 		private QuestionSagaConfiguration _config;
 		public QuestionSaga() : this(new QuestionSagaConfiguration()) { }
+		private readonly IWriteConsistency _writeConsistency = new WriteAll(TimeSpan.FromSeconds(1));
+		private readonly Cluster _cluster = Cluster.Get(Context.System);
 
 		public QuestionSaga(QuestionSagaConfiguration config)
 		{
@@ -61,8 +67,19 @@ namespace CrowdQuery.AS.Sagas.QuestionSaga
 
 		public bool Handle(IDomainEvent<QuestionActor, QuestionId, QuestionCreated> domainEvent)
 		{
+
 			var evnt = new QuestionSagaCreated(domainEvent.AggregateEvent.Question, domainEvent.AggregateEvent.Answers);
 			Emit(evnt);
+			var replicator = DistributedData.Get(Context.System).Replicator;
+
+			replicator.Tell(Dsl.Update(
+				AllQuestionsActor.AllQuestionsBasicKey,
+				LWWDictionary<string, BasicQuestionState>.Empty,
+				_writeConsistency,
+				state =>
+					state.SetItem(_cluster, domainEvent.AggregateIdentity.Value, new BasicQuestionState(domainEvent.AggregateIdentity.Value, domainEvent.AggregateEvent.Question, 0, 0))
+			));
+
 			var updatedState = new QuestionStateUpdated(evnt.Question, evnt.Answers.ToDictionary(x => x, y => (long)0), Subscribers.Count);
 			_debouncer.Tell(updatedState);
 			return true;

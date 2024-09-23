@@ -1,88 +1,128 @@
 ﻿@page "/question/add"
+@using Akkatecture.Aggregates.CommandResults
 @inject IRequiredActor<QuestionManager> _questionManager
 @inject ILogger<AddQuestion> _logger
+@inject NavigationManager _navigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Add Question</PageTitle>
-<h1>Loading -> @(isLoading ? "true": "false")</h1>
 <MudPaper class="pa-16 ma-10 d-flex flex-wrap flex-column">
-    <MudText Typo="Typo.h3" style="border:solid">What's your question?</MudText>
-    <MudTextField style="border:solid" @bind-Value="question" Label="Question" Variant="Variant.Outlined">
-    </MudTextField>
-    <div class="d-flex flex-wrap" style="border:solid">
-        @for (var i = 0; i < answers.Count; i++)
-        {
-            int index = i;
-            <div class="pa-5 flex-25">
-                <MudTextField Counter="256" Validation="(string ans) => ValidateAnswers(ans)" @ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]"
-                    Label="@($"Answer")" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
-                    OnClick="_ => answers.RemoveAt(index)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="AddAnswer" />
-            </div>
-        }
-    </div>
-    <div class="d-flex justify-end">
-        <MudButton class="ma-1" Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
-        <MudButton class="ma-1" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit</MudButton>
-    </div>
+	<MudText Typo="Typo.h3">What's your question?</MudText>
+	<MudTextField Elevation="2" T="string" @ref="questionElement" @bind-Value="question" Label="Question" Variant="Variant.Outlined"
+		Validation="@((string quest) => ValidateQuestion(quest))">
+	</MudTextField>
+	<div class="d-flex flex-wrap">
+		@for (var i = 0; i < answers.Count; i++)
+		{
+			int index = i;
+			<div class="pa-5 flex-25">
+				<MudTextField T="string" Counter="256" Immediate="true" Validation="@((string ans) => ValidateAnswers(ans))"
+					@ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]" Label="Answer" />
+				<MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
+					OnClick="_ => answers.RemoveAt(index)" />
+				<MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="AddAnswer" />
+			</div>
+		}
+	</div>
+	<div class="d-flex justify-end">
+		<MudButton class="ma-1" Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+		<MudButton class="ma-1" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+	</div>
 </MudPaper>
 
 
 @code {
-    private bool isLoading = true;
-    private IActorRef questionManager = ActorRefs.Nobody;
-    [Inject] public required IDialogService DiaglogService {get;set;}
-    private List<Action> actionsToRun = new List<Action>();
-    private Dictionary<int, MudTextField<string>> answerElements = new Dictionary<int, MudTextField<string>>();
-    string question = string.Empty;
-    List<string> answers = new List<string>() { "" };
+	private IActorRef questionManager = ActorRefs.Nobody;
+	[Inject] public required IDialogService DiaglogService { get; set; }
+	private List<Action> actionsToRun = new List<Action>();
+	private Dictionary<int, MudTextField<string>> answerElements = new Dictionary<int, MudTextField<string>>();
+	private MudTextField<string> questionElement = new MudTextField<string>();
+	string question = string.Empty;
+	List<string> answers = new List<string>() { "" };
 
-    protected async override Task OnInitializedAsync()
-    {
-        _logger.LogDebug("OnInitializedAsync");
-        questionManager = await _questionManager.GetAsync();
-        isLoading = questionManager.IsNobody();
-    }
+	protected async override Task OnInitializedAsync()
+	{
+		_logger.LogDebug("OnInitializedAsync");
+		questionManager = await _questionManager.GetAsync();
+	}
 
-    protected override void OnAfterRender(bool isFirstRender)
-    {
-        foreach (var action in actionsToRun)
-        {
-            action.Invoke();
-        }
-        actionsToRun.Clear();
-    }
+	protected override void OnAfterRender(bool isFirstRender)
+	{
+		foreach (var action in actionsToRun)
+		{
+			action.Invoke();
+		}
+		actionsToRun.Clear();
+	}
 
-    private void AddAnswer()
-    {
-        answers.Add(string.Empty);
-        _logger.LogDebug($"Count {answerElements.Count}");
-        actionsToRun.Add(() => answerElements[answers.Count - 1].FocusAsync());
-    }
+	private void AddAnswer()
+	{
+		answers.Add(string.Empty);
+		_logger.LogDebug($"Count {answerElements.Count}");
+		actionsToRun.Add(() => answerElements[answers.Count - 1].FocusAsync());
+	}
 
-    private async void Cancel()
-    {
-        _logger.LogDebug("Cancel");
-        bool? result = await DiaglogService.ShowMessageBox("Warning", "Are you sure you want to cancel?", "Yes", "No");
-        if (result == null || result == false)
-        {
-            _logger.LogDebug("falsey");
-            return;
-        }
-        _logger.LogDebug("truthy");
+	private async void Cancel()
+	{
+		_logger.LogDebug("Cancel");
+		bool? result = await DiaglogService.ShowMessageBox("Warning", "Are you sure you want to cancel?", "Yes", "No");
+		if (result == null || result == false)
+		{
+			_logger.LogDebug("falsey");
+			return;
+		}
+		_logger.LogDebug("truthy");
 
-        //navigate to homepage
-    }
+		_navigationManager.NavigateTo("/");
+	}
 
-    private async void Submit()
-    {
-        var command = new CreateQuestion(QuestionId.New, question, answers);
-    }
+	private async void Submit()
+	{
+		var tasks = new List<Task>();
+		tasks.Add(questionElement.Validate());
+		foreach (var a in answerElements)
+		{
+			tasks.Add(a.Value.Validate());
+		}
+		Task.WaitAll(tasks.ToArray());
+		var hasErrors = questionElement.HasErrors || answerElements.Values.Any(a => a.HasErrors);
+		if (!hasErrors)
+		{
+			var command = new CreateQuestion(QuestionId.New, question, answers);
+			var response = await questionManager.Ask<CommandResult>(command);
+			if (response.IsSuccess)
+			{
+				_navigationManager.NavigateTo("/");
+			}
+			else
+			{
+				var errResponse = (FailedCommandResult)response;
+				_logger.LogWarning($"Failed to submit question because {string.Join(", ", errResponse.Errors)}");
+				await DiaglogService.ShowMessageBox("Error", "There was a problem with submitting your question");
+			}
+		}
 
-    private void ValidateAnswers(object i)
-    {
-        _logger.LogDebug($"ValidateAnswers");
-        
-    }
+	}
+
+	private IEnumerable<string> ValidateAnswers(string input)
+	{
+		if (string.IsNullOrWhiteSpace(input))
+		{
+			yield return "Answer cannot be empty";
+		}
+	}
+
+	private IEnumerable<string> ValidateQuestion(string input)
+	{
+		if (string.IsNullOrWhiteSpace(input))
+		{
+			yield return "Question cannot be emptpy";
+		}
+
+	}
 }
+
+
+
+
+@*question-204d7f8e-18bc-4a8a-8ac8-16aa02122ae1*@
