@@ -6,8 +6,8 @@ using Akka.Logger.Serilog;
 using Akka.Persistence.Sql.Hosting;
 using Akka.Remote.Hosting;
 using CrowdQuery.AS.Actors;
-using CrowdQuery.AS.Actors.Question;
-using CrowdQuery.AS.Sagas.QuestionSaga;
+using CrowdQuery.AS.Actors.Prompt;
+using CrowdQuery.AS.Sagas.PromptSaga;
 using LinqToDB;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +21,8 @@ public static class ServiceCollectionExtension
         var config = new CrowdQueryAkkaConfiguration();
         configuration.Bind("Akka", config);
 
-        var questionSagaConfig = new QuestionSagaConfiguration();
-        configuration.Bind("CrowdQuery:QuestionSaga", questionSagaConfig);
+        var PromptSagaConfig = new PromptSagaConfiguration();
+        configuration.Bind("CrowdQuery:PromptSaga", PromptSagaConfig);
         if (config.IsInvalid())
         {
             throw new ArgumentException("Must provide a valid 'Akka' section config");
@@ -56,12 +56,12 @@ public static class ServiceCollectionExtension
             .WithDistributedData(new DDataOptions())
             .WithActors((actorSystem, registry) =>
             {
-                var questionManager = actorSystem.ActorOf(QuestionManager.PropsFor(), "question-manager");
-                registry.Register<QuestionManager>(questionManager);
-                var questionSagaManager = actorSystem.ActorOf(QuestionSagaManager.PropsFor(() => new QuestionSaga(questionSagaConfig)), "question-saga-manager");
-                registry.Register<QuestionSagaManager>(questionSagaManager);
-                var allQuestionsActor = actorSystem.ActorOf(AllQuestionsActor.PropsFor(), "all-questions-actor");
-                registry.Register<AllQuestionsActor>(allQuestionsActor);
+                var promptManager = actorSystem.ActorOf(PromptManager.PropsFor(), "Prompt-manager");
+                registry.Register<PromptManager>(promptManager);
+                var promptSagaManager = actorSystem.ActorOf(PromptSagaManager.PropsFor(() => new PromptSaga(PromptSagaConfig)), "Prompt-saga-manager");
+                registry.Register<PromptSagaManager>(promptSagaManager);
+                var allPromptsActor = actorSystem.ActorOf(AllPromptsActor.PropsFor(), "all-Prompts-actor");
+                registry.Register<AllPromptsActor>(allPromptsActor);
             });
         });
         return services;

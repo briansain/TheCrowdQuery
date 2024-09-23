@@ -3,7 +3,7 @@ using Akka.Event;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
 using Akka.Persistence.Sql.Hosting;
-using CrowdQuery.AS.Actors.Question;
+using CrowdQuery.AS.Actors.Prompt;
 using LinqToDB;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

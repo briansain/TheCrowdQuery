@@ -1,5 +1,5 @@
 ﻿@page "/"
-@inject IRequiredActor<AllQuestionsActor> allQuestionsActor
+@inject IRequiredActor<AllPromptsActor> allPromptsActor
 @inject ILogger<Home> _logger;
 
 <PageTitle>Home</PageTitle>
@@ -9,13 +9,13 @@
 @*done loading stuff*@
 
 @code {
-    private IActorRef _allQuestionsActor = ActorRefs.Nobody;
+    private IActorRef _allPromptsActor = ActorRefs.Nobody;
     private bool isLoaded;
     protected async override Task OnInitializedAsync()
     {
         _logger.LogDebug("Starting OnInitializedAsync");
-        _allQuestionsActor = await allQuestionsActor.GetAsync();
-        var response = await _allQuestionsActor.Ask<List<BasicQuestionState>>(new RequestBasicQuestionState());
-        _logger.LogDebug($"Received response from AllQuestionsActor: {string.Join(", ", response.Select(r => r.question))}");
+        _allPromptsActor = await allPromptsActor.GetAsync();
+        var response = await _allPromptsActor.Ask<List<BasicPromptState>>(new RequestBasicPromptState());
+        _logger.LogDebug($"Received response from AllPromptsActor: {string.Join(", ", response.Select(r => r.Prompt))}");
     }
 }
