@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Collections.Immutable
+@using CrowdQuery.AS.Projections.BasicPromptStateProjection
 @* @inject IRequiredActor<AllPromptsActor> allPromptsActor *@
 @inject ILogger<Home> _logger
 <PageTitle>Home</PageTitle>
@@ -56,7 +57,7 @@
         _logger.LogDebug("Starting OnInitializedAsync");
         await Task.Delay(1000);
         @* _allPromptsActor = await allPromptsActor.GetAsync(); *@
-        var response = await _allPromptsActor.Ask<ImmutableDictionary<string, BasicPromptState>>(new RequestBasicPromptState());
+        var response = await _allPromptsActor.Ask<Dictionary<string, BasicPromptState>>(new GetBasicPromptState());
         _logger.LogDebug($"Received response from AllPromptsActor: {string.Join(", ", response.Values.Select(r => r.prompt))}");
         dataItems = new Dictionary<string, BasicPromptState>(response);
         isLoaded = true;

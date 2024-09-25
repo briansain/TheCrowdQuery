@@ -12,7 +12,6 @@ using Akkatecture.Aggregates;
 using CrowdQuery.AS.Actors.Prompt;
 using CrowdQuery.AS.Actors.Prompt.Events;
 using CrowdQuery.AS.Projections.BasicPromptStateProjection;
-using CrowdQuery.Messages;
 
 namespace CrowdQuery.AS.Projections.PromptProjection
 {
@@ -80,6 +79,9 @@ namespace CrowdQuery.AS.Projections.PromptProjection
                         break;
                 }
             });
+            Recover<ProjectionCreated>(Handle);
+            Recover<ProjectionAnswerIncreased>(Handle);
+            Recover<ProjectionAnswerDecreased>(Handle);
             // Command<Rebuild>(msg => {
             //     Become(Rebuilding);
             //     Self.Tell(msg);
@@ -100,8 +102,9 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             ));
         }
         
-        public static Props PropsFor(string persistenceId, PromptProjectionConfiguration config)
+        public static Props PropsFor(string persistenceId, PromptProjectionConfiguration? config = null)
         {
+            config ??= new PromptProjectionConfiguration();
             return Props.Create(() => new PromptProjector(persistenceId, config));
         }
 
@@ -135,7 +138,7 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         {
             if (evnt.PromptSequenceNumber > _state.LastSequenceNumber)
             {
-            _state.Answers[evnt.Answer] = _state.Answers[evnt.Answer]++;
+                _state.Answers[evnt.Answer]++;
                 _state = _state with {LastSequenceNumber = evnt.PromptSequenceNumber};
             }
             else
@@ -148,7 +151,7 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         {
             if (evnt.PromptSequenceNumber > _state.LastSequenceNumber)
             {
-                _state.Answers[evnt.Answer] = _state.Answers[evnt.Answer]--;
+                _state.Answers[evnt.Answer]--;
                 _state = _state with {LastSequenceNumber = evnt.PromptSequenceNumber};
             }
             else

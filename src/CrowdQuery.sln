@@ -15,8 +15,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.AS.Tests", "Crow
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdQuery.Blazor", "CrowdQuery.Blazor\CrowdQuery.Blazor.csproj", "{1BE633B8-711B-4960-9C3D-62AC4BEA5451}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdQuery.Messages", "CrowdQuery.Messages\CrowdQuery.Messages.csproj", "{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1BE633B8-711B-4960-9C3D-62AC4BEA5451}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2CE35D3B-1DD5-48CD-843C-6EDE9DF78EC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

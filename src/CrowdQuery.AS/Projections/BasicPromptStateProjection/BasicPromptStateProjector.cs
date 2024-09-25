@@ -7,8 +7,6 @@ using Akka.Event;
 using Akka.Persistence;
 using Akka.Streams;
 using Akka.Streams.Dsl;
-using CrowdQuery.Messages;
-
 namespace CrowdQuery.AS.Projections.BasicPromptStateProjection
 {
     public class BasicPromptStateProjector : ReceiveActor
@@ -22,11 +20,11 @@ namespace CrowdQuery.AS.Projections.BasicPromptStateProjection
         public BasicPromptStateProjector(BasicPromptStateConfiguration configuration)
         {
             _config = configuration;
-            Receive<AddSubscriber>(msg => 
-            {
-                _subscribers.Add(msg.Subscriber);
-                msg.Subscriber.Tell(_state.ToImmutableDictionary());
-            });
+            // Receive<AddSubscriber>(msg => 
+            // {
+            //     _subscribers.Add(msg.Subscriber);
+            //     msg.Subscriber.Tell(_state.ToImmutableDictionary());
+            // });
             Receive<IGetResponse>(msg =>
             {
                 switch(msg)
@@ -65,7 +63,7 @@ namespace CrowdQuery.AS.Projections.BasicPromptStateProjection
             return Props.Create(() => new BasicPromptStateProjector(config));
         }
 
-        protected override void PreStart()
+        public override void AroundPreStart()
         {
             var replicator = DistributedData.Get(Context.System).Replicator;
             replicator.Tell(Dsl.Subscribe(Key, Self));
@@ -93,4 +91,5 @@ namespace CrowdQuery.AS.Projections.BasicPromptStateProjection
     }
 
     public class GetBasicPromptState {}
+	public record BasicPromptState(string prompt, int answerCount, int totalVotes) {}
 }

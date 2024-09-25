@@ -79,20 +79,24 @@ public static class ServiceCollectionExtension
                         typeof(PromptProjector).Name,
                         persistenceId => PromptProjector.PropsFor(persistenceId, promptProjectionConfiguration),
                         clusterSharding.Settings.WithRole(ClusterConstants.ProjectionNode),
-                        new PromptProjectorMessageExtractor(100));
+                        new PromptProjectorMessageExtractor(100)
+                    );
+
+                    var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(promptProjectorShard), "projection-manager");
+                    registry.Register<PromptProjectorManager>(promptProjectorManager);
                 }
                 else
                 {
-                    promptProjectorShard = clusterSharding.StartProxy()
+                    promptProjectorShard = clusterSharding.StartProxy(
+                        typeof(PromptProjector).Name,
+                        ClusterConstants.ProjectionProxyNode,
+                        new PromptProjectorMessageExtractor(100)
+                    );
                 }
                 registry.Register<PromptProjector>(promptProjectorShard);
 
-                var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(promptProjectorShard), "projection-manager");
-                registry.Register<PromptProjectorManager>(promptProjectorManager);
-
                 var promptBasicStateProjector = actorSystem.ActorOf(BasicPromptStateProjector.PropsFor(promptBasicStateProjectorConfiguration), "basic-prompt-projector");
                 registry.Register<BasicPromptStateProjector>(promptBasicStateProjector);
-
             });
         });
         return services;
@@ -102,6 +106,7 @@ public static class ServiceCollectionExtension
     {
         public static readonly string MainNode = "main-node";
         public static readonly string ProjectionNode = "projection-node";
+        public static readonly string ProjectionProxyNode = "projection-proxy-node";
     }
 }
 

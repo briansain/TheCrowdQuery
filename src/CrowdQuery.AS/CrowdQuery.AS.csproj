@@ -51,10 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CrowdQuery.Messages\CrowdQuery.Messages.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Projections/" />
     <Folder Include="ResponseModels\" />
   </ItemGroup>
