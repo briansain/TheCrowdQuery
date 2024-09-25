@@ -5,7 +5,8 @@ VisualStudioVersion = 17.9.34616.47
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{70B3DE7C-F9B8-4AD1-A0F4-EB8287B42853}"
 	ProjectSection(SolutionItems) = preProject
-		docker\postgres.docker-compose = docker\postgres.docker-compose
+		lighthouse.docker-compose = lighthouse.docker-compose
+		..\docker\postgres.docker-compose = ..\docker\postgres.docker-compose
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdQuery.AS", "CrowdQuery.AS\CrowdQuery.AS.csproj", "{141015E5-B155-484C-BFE4-655834AE7BE6}"

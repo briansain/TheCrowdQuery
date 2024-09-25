@@ -8,7 +8,7 @@
 <PageTitle>Add Prompt</PageTitle>
 <MudPaper class="pa-16 ma-10 d-flex flex-wrap flex-column">
 	<MudText Typo="Typo.h3">What's your Prompt?</MudText>
-	<MudTextField Elevation="2" T="string" @ref="PromptElement" @bind-Value="Prompt" Label="Prompt" Variant="Variant.Outlined"
+	<MudTextField T="string" @ref="PromptElement" @bind-Value="Prompt" Label="Prompt" Variant="Variant.Outlined"
 		Validation="@((string quest) => ValidatePrompt(quest))">
 	</MudTextField>
 	<div class="d-flex flex-wrap">

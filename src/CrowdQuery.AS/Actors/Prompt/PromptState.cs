@@ -17,9 +17,9 @@ namespace CrowdQuery.AS.Actors.Prompt
 			Prompt = string.Empty;
 		}
 
-		public PromptState(string Prompt, Dictionary<string, long> answers)
+		public PromptState(string prompt, Dictionary<string, long> answers)
 		{
-			Prompt = Prompt;
+			Prompt = prompt;
 			AnswerVotes = answers;
 		}
 

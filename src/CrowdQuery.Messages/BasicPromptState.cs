@@ -1,6 +1,6 @@
 ﻿namespace CrowdQuery.Messages
 {
-	public record BasicPromptState(string PromptId, string Prompt, int answerCount, int totalVotes)
+	public record BasicPromptState(string prompt, int answerCount, int totalVotes)
 	{
 
 	}

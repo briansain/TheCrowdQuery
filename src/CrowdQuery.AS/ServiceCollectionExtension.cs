@@ -1,13 +1,16 @@
 using Akka.Actor;
 using Akka.Cluster.Hosting;
+using Akka.Cluster.Sharding;
 using Akka.Event;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
 using Akka.Persistence.Sql.Hosting;
 using Akka.Remote.Hosting;
-using CrowdQuery.AS.Actors;
+using Akkatecture.Clustering;
+using Akkatecture.Clustering.Core;
 using CrowdQuery.AS.Actors.Prompt;
-using CrowdQuery.AS.Sagas.PromptSaga;
+using CrowdQuery.AS.Projections.BasicPromptStateProjection;
+using CrowdQuery.AS.Projections.PromptProjection;
 using LinqToDB;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,19 +19,25 @@ namespace CrowdQuery.AS;
 
 public static class ServiceCollectionExtension
 {
-    public static IServiceCollection AddCrowdQueryAkka(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCrowdQueryAkka(this IServiceCollection services, IConfiguration configuration, string[] roles)
     {
         var config = new CrowdQueryAkkaConfiguration();
         configuration.Bind("Akka", config);
 
-        var PromptSagaConfig = new PromptSagaConfiguration();
-        configuration.Bind("CrowdQuery:PromptSaga", PromptSagaConfig);
+        var promptProjectionConfiguration = new PromptProjectionConfiguration();
+        configuration.Bind("CrowdQuery:PromptProjection", promptProjectionConfiguration);
+        services.AddSingleton(promptProjectionConfiguration);
+
+        var promptBasicStateProjectorConfiguration = new BasicPromptStateConfiguration();
+        configuration.Bind("CrowdQuery:BasicStateProjector", promptBasicStateProjectorConfiguration);
+        services.AddSingleton(promptBasicStateProjectorConfiguration);
+
         if (config.IsInvalid())
         {
             throw new ArgumentException("Must provide a valid 'Akka' section config");
         }
 
-        services.AddAkka("crowdquery-service", builder =>
+        services.AddAkka("crowd-query", builder =>
         {
             builder.ConfigureLoggers(configLoggers =>
             {
@@ -41,30 +50,58 @@ public static class ServiceCollectionExtension
             .WithRemoting("localhost", 5110)
             .WithClustering(new ClusterOptions()
             {
-                SeedNodes = ["akka://crowdquery-service"]
+                Roles = roles,
+                SeedNodes = ["akka.tcp://crowd-query@localhost:5053"]
             })
-            // .WithDistributedData(options => 
-            // {
-            //     // configure DData accordingly
-            //     options.Durable = new DurableOptions()
-            //     {
-            //         // disable durable storage for this actor
-            //         Keys = []
-            //     };
-            //     options.RecreateOnFailure = true;
-            // })
-            .WithDistributedData(new DDataOptions())
+            .WithDistributedData(new DDataOptions()
+            {
+                RecreateOnFailure = true,
+                Durable = new DurableOptions()
+                {
+                    Keys = []
+                }
+
+            })
             .WithActors((actorSystem, registry) =>
             {
-                var promptManager = actorSystem.ActorOf(PromptManager.PropsFor(), "Prompt-manager");
-                registry.Register<PromptManager>(promptManager);
-                var promptSagaManager = actorSystem.ActorOf(PromptSagaManager.PropsFor(() => new PromptSaga(PromptSagaConfig)), "Prompt-saga-manager");
-                registry.Register<PromptSagaManager>(promptSagaManager);
-                var allPromptsActor = actorSystem.ActorOf(AllPromptsActor.PropsFor(), "all-Prompts-actor");
-                registry.Register<AllPromptsActor>(allPromptsActor);
+                var clusterSharding = ClusterSharding.Get(actorSystem);
+                var promptManagerShard = clusterSharding.Start(
+                    typeof(PromptManager).Name,
+                    Props.Create(() => new ClusterParentProxy(PromptManager.PropsFor(), false)),
+                    clusterSharding.Settings.WithRole(ClusterConstants.MainNode),
+                    new MessageExtractor<PromptActor, PromptId>(100));
+                registry.Register<PromptManager>(promptManagerShard);
+
+                IActorRef promptProjectorShard = ActorRefs.Nobody;
+                if (roles.Contains(ClusterConstants.ProjectionNode))
+                {
+                    promptProjectorShard = clusterSharding.Start(
+                        typeof(PromptProjector).Name,
+                        persistenceId => PromptProjector.PropsFor(persistenceId, promptProjectionConfiguration),
+                        clusterSharding.Settings.WithRole(ClusterConstants.ProjectionNode),
+                        new PromptProjectorMessageExtractor(100));
+                }
+                else
+                {
+                    promptProjectorShard = clusterSharding.StartProxy()
+                }
+                registry.Register<PromptProjector>(promptProjectorShard);
+
+                var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(promptProjectorShard), "projection-manager");
+                registry.Register<PromptProjectorManager>(promptProjectorManager);
+
+                var promptBasicStateProjector = actorSystem.ActorOf(BasicPromptStateProjector.PropsFor(promptBasicStateProjectorConfiguration), "basic-prompt-projector");
+                registry.Register<BasicPromptStateProjector>(promptBasicStateProjector);
+
             });
         });
         return services;
+    }
+
+    public static class ClusterConstants
+    {
+        public static readonly string MainNode = "main-node";
+        public static readonly string ProjectionNode = "projection-node";
     }
 }
 

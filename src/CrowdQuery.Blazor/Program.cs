@@ -2,6 +2,7 @@ using CrowdQuery.AS;
 using CrowdQuery.Blazor.Components;
 using MudBlazor.Services;
 using Serilog;
+using static CrowdQuery.AS.ServiceCollectionExtension;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
@@ -23,7 +24,7 @@ builder.Host.ConfigureServices((context, services) => {
     //             .CreateLogger();
     services
         // .AddLogging(config => config.AddSerilog())
-        .AddCrowdQueryAkka(context.Configuration)
+        .AddCrowdQueryAkka(context.Configuration, [ClusterConstants.MainNode])
         .AddMudServices()
         .AddRazorComponents()
         .AddInteractiveServerComponents();;

@@ -31,6 +31,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Creating new Prompt: {command.Prompt}");
 				var evnt = new PromptCreated(command.Prompt, command.Answers);
 				Emit(evnt);
+				
 				Sender.Tell(CommandResult.SucceedWith(command));
 				return true;
 			}
