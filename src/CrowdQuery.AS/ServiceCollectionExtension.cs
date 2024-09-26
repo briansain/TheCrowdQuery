@@ -78,7 +78,7 @@ public static class ServiceCollectionExtension
                 RecreateOnFailure = true,
                 Durable = new DurableOptions()
                 {
-                    Keys = []
+                    Keys = [BasicPromptStateProjector.Key]
                 }
 
             })

@@ -1,0 +1,101 @@
+@page "/prompt/{promptId}"
+@using System.Collections.Immutable
+@using Akka.Streams
+@using Akka.Streams.Dsl
+@using CrowdQuery.AS.Projections
+@using CrowdQuery.AS.Projections.BasicPromptStateProjection
+@using CrowdQuery.AS.Projections.PromptProjection
+@implements IDisposable
+@inject IRequiredActor<BasicPromptStateProjector> basicProjector;
+@inject ILogger<ViewPrompt> _logger
+@inject IRequiredActor<PromptProjector> promptProjector;
+@inject ActorSystem _actorSystem;
+
+<PageTitle>@_prompt?.Prompt</PageTitle>
+@if (_prompt != null)
+{
+    <MudPaper class="pa-16 ma-10 d-flex flex-wrap flex-column" Elevation="2">
+    <MudText Typo="Typo.h3">@_prompt.Prompt</MudText>
+
+    <div class="d-flex flex-wrap">
+        @foreach (var keyPair in _prompt.Answers)
+            {
+                var v = keyPair;
+                <div class="pa-5 flex-25">
+                    <MudButton class="normal-case" Color="Color.Primary" Variant="Variant.Filled" aria-label="add"
+                        OnClick="() => Vote(v)">@v.Key</MudButton>
+                </div>
+            }
+        </div>
+
+
+    </MudPaper>
+}
+else
+{
+    <h1>Loading</h1>
+}
+@code {
+    [Parameter]
+    public string? promptId { get; set; }
+    private PromptProjectionState? _prompt;
+    private IActorRef? _promptProjector;
+    private CancellationTokenSource _pageCancellationToken = new();
+    protected async override Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitialized");
+        var _promptProjector = await promptProjector.GetAsync(_pageCancellationToken.Token);
+        _logger.LogDebug($"Before RunSubscription {_promptProjector.Path}");
+        _ = RunSubscription(_promptProjector);
+        _logger.LogDebug($"Finished OnInitialized {_promptProjector.Path}");
+        @* await base.OnInitializedAsync(); *@
+        @* sourcetask.Start(); *@
+    }
+
+    async Task RunSubscription(IActorRef promptProj)
+    {
+        try
+        {
+        _logger.LogDebug($"RunSubscription");
+        var projectorId = promptId!.ToPromptId().ToPromptProjectorId();
+        _logger.LogDebug("1");
+        var (actorRef, source) = Source
+            .ActorRef<PromptProjectionState>(10, Akka.Streams.OverflowStrategy.DropHead)
+            .PreMaterialize(_actorSystem);
+        _logger.LogDebug($"2; {promptProj?.Path.ToStringWithAddress() ?? "null"}");
+        promptProj.Tell(new AddSubscriber(actorRef, projectorId));
+        _logger.LogDebug($"Told PromptProjector {promptProj!.Path}");
+        var a = source.Via(_pageCancellationToken.Token.AsFlow<PromptProjectionState>(cancelGracefully:true));
+        await foreach(var i in a
+                        .RunAsAsyncEnumerable(_actorSystem)
+                        .WithCancellation(_pageCancellationToken.Token))
+        {
+            _logger.LogDebug($"Ran foreach loop");
+            _prompt = i;
+            StateHasChanged();
+        }
+        _logger.LogDebug("Finished RunSubscription");
+        }
+        catch(Exception e)
+        {
+            _logger.LogError($"e.Message: {e.Message}; e.Source: {e.Source}");
+        }
+        promptProj.Tell(PoisonPill.Instance);
+    }
+
+    public void Dispose()
+    {
+        _logger.LogDebug("Dispose");
+        @* _logger.LogInformation($"Dispose; {sourcetask!.IsCompleted}; {_pageCancellationToken.IsCancellationRequested};"); *@
+        _pageCancellationToken.Cancel();
+        _pageCancellationToken.Dispose();
+        @* _sourceActor.Tell(PoisonPill.Instance); *@
+        @* _logger.LogInformation($"IsComplete: {sourcetask.IsCompleted}; IsCompeltedSuccessfully: {sourcetask.IsCompletedSuccessfully}"); *@
+    }
+
+    private EventCallback Vote(object o)
+    {
+        Console.WriteLine($"Voted for {o}");
+        return EventCallback.Empty;
+    }
+}

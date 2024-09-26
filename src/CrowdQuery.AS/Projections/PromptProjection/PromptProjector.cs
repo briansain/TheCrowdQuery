@@ -27,6 +27,7 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         private IActorRef _replicator = ActorRefs.Nobody;
         public PromptProjector(string persistenceId, PromptProjectionConfiguration config)
         {
+            _logger.Debug("Constructing PromptProjector");
             _config = config;
             _persistenceId = persistenceId;
             _replicator = DistributedData.Get(Context.System).Replicator;
@@ -56,7 +57,7 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             {
                 _logger.Info($"Adding new subscriber: {msg.Subscriber.Path}");
                 _subscribers.Add(msg.Subscriber);
-                Context.WatchWith(msg.Subscriber, new RemoveSubscriber(msg.Subscriber));
+                Context.WatchWith(msg.Subscriber, new RemoveSubscriber(msg.Subscriber, _persistenceId));
                 msg.Subscriber.Tell(_state);
             });
             Command<RemoveSubscriber>(msg =>
@@ -229,6 +230,10 @@ namespace CrowdQuery.AS.Projections.PromptProjection
                     return increased.AggregateId.ToPromptProjectorId();
                 case ProjectedEvent<AnswerVoteDecreased, PromptId> decreased:
                     return decreased.AggregateId.ToPromptProjectorId();
+                case AddSubscriber addSubscriber:
+                    return addSubscriber.EntityId;
+                case RemoveSubscriber removeSubscriber:
+                    return removeSubscriber.EntityId;
             }
 
             throw new Exception($"Could not get EntityId from type {message.GetType()}");
