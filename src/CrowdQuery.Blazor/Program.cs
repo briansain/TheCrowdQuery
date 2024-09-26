@@ -24,7 +24,7 @@ builder.Host.ConfigureServices((context, services) => {
     //             .CreateLogger();
     services
         // .AddLogging(config => config.AddSerilog())
-        .AddCrowdQueryAkka(context.Configuration, [ClusterConstants.MainNode])
+        .AddCrowdQueryAkka(context.Configuration, [ClusterConstants.MainNode, ClusterConstants.ProjectionNode])
         .AddMudServices()
         .AddRazorComponents()
         .AddInteractiveServerComponents();;

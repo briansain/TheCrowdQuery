@@ -50,17 +50,13 @@ namespace CrowdQuery.AS.Tests
 			var promptId = PromptId.New;
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			DistributedData.Get(Sys).Replicator.Tell(Dsl.Subscribe(BasicPromptStateProjector.Key, _testProbe));
-			var evnt = new DomainEvent<PromptActor, PromptId, PromptCreated>(
-				PromptId.New,
-				new PromptCreated("Are you there?", ["yes", "no"]),
-				new Metadata(),
-				DateTimeOffset.Now,
-				1);
-
+			var evnt = new ProjectedEvent<PromptCreated, PromptId>(new PromptCreated("Are you there?", ["yes", "no"]), promptId, 1);
 			promptProjector.Tell(evnt);
+
 			var changed = _testProbe.ExpectMsg<Changed>();
 			var changedData = changed.Get(BasicPromptStateProjector.Key);
 			changedData.ContainsKey(promptId.ToBase64()).Should().BeTrue();
+			
 			var projectedData = changedData[promptId.ToBase64()];
 			projectedData.prompt.Should().Be("Are you there?");
 			projectedData.answerCount.Should().Be(2);
@@ -74,12 +70,7 @@ namespace CrowdQuery.AS.Tests
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			promptProjector.Tell(new AddSubscriber(_testProbe));
 			_testProbe.ExpectMsg<PromptProjectionState>();
-			var evnt = new DomainEvent<PromptActor, PromptId, PromptCreated>(
-				PromptId.New,
-				new PromptCreated("Are you there?", ["yes", "no"]),
-				new Metadata(),
-				DateTimeOffset.Now,
-				1);
+			var evnt = new ProjectedEvent<PromptCreated, PromptId>(new PromptCreated("Are you there?", ["yes", "no"]), promptId, 1);
 
 			promptProjector.Tell(evnt);
 			var state = _testProbe.ExpectMsg<PromptProjectionState>();
@@ -95,12 +86,7 @@ namespace CrowdQuery.AS.Tests
 			InitializeEventJournal(promptId.ToPromptProjectorId(), new ProjectionCreated("Are you there?", new Dictionary<string, int>() { { "Yes", 0 }, { "No", 0 } }));
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			DistributedData.Get(Sys).Replicator.Tell(Dsl.Subscribe(BasicPromptStateProjector.Key, _testProbe));
-			var evnt = new DomainEvent<PromptActor, PromptId, AnswerVoteIncreased>(
-				PromptId.New,
-				new AnswerVoteIncreased("Yes"),
-				new Metadata(),
-				DateTimeOffset.Now,
-				2);
+			var evnt = new ProjectedEvent<AnswerVoteIncreased, PromptId>(new AnswerVoteIncreased("Yes"), promptId, 2);
 
 			promptProjector.Tell(evnt);
 			var changed = _testProbe.ExpectMsg<Changed>();
@@ -120,12 +106,7 @@ namespace CrowdQuery.AS.Tests
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			promptProjector.Tell(new AddSubscriber(_testProbe));
 			_testProbe.ExpectMsg<PromptProjectionState>();
-			var evnt = new DomainEvent<PromptActor, PromptId, AnswerVoteIncreased>(
-				PromptId.New,
-				new AnswerVoteIncreased("Yes"),
-				new Metadata(),
-				DateTimeOffset.Now,
-				2);
+			var evnt = new ProjectedEvent<AnswerVoteIncreased, PromptId>(new AnswerVoteIncreased("Yes"), promptId, 2);
 
 			promptProjector.Tell(evnt);
 			var state = _testProbe.ExpectMsg<PromptProjectionState>();
@@ -144,12 +125,7 @@ namespace CrowdQuery.AS.Tests
 				new ProjectionAnswerIncreased("Yes", 2));
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			DistributedData.Get(Sys).Replicator.Tell(Dsl.Subscribe(BasicPromptStateProjector.Key, _testProbe));
-			var evnt = new DomainEvent<PromptActor, PromptId, AnswerVoteDecreased>(
-				PromptId.New,
-				new AnswerVoteDecreased("Yes"),
-				new Metadata(),
-				DateTimeOffset.Now,
-				3);
+			var evnt = new ProjectedEvent<AnswerVoteDecreased, PromptId>(new AnswerVoteDecreased("Yes"), promptId, 3);
 
 			promptProjector.Tell(evnt);
 			var changed = _testProbe.ExpectMsg<Changed>();
@@ -171,12 +147,7 @@ namespace CrowdQuery.AS.Tests
 			var promptProjector = Sys.ActorOf(PromptProjector.PropsFor(promptId.ToPromptProjectorId(), _config));
 			promptProjector.Tell(new AddSubscriber(_testProbe));
 			_testProbe.ExpectMsg<PromptProjectionState>();
-			var evnt = new DomainEvent<PromptActor, PromptId, AnswerVoteDecreased>(
-				PromptId.New,
-				new AnswerVoteDecreased("Yes"),
-				new Metadata(),
-				DateTimeOffset.Now,
-				3);
+			var evnt = new ProjectedEvent<AnswerVoteDecreased, PromptId>(new AnswerVoteDecreased("Yes"), promptId, 3);
 
 			promptProjector.Tell(evnt);
 			var state = _testProbe.ExpectMsg<PromptProjectionState>();

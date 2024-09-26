@@ -9,28 +9,25 @@ namespace CrowdQuery.AS.Projections.PromptProjection
 {
     public class PromptProjectorManager : ReceiveActor
     {
-        public static string PromptCreated = "PromptCreated";
-        public static string AnswerVoteIncreased = "AnswerVoteIncreased";
-        public static string AnswerVoteDecreased = "AnswerVoteDecreased";
-        public static string GroupId = "ProjectorGroup";
-        private readonly IActorRef _promptShard;
-        public PromptProjectorManager(IActorRef promptShard)
+
+        private readonly IActorRef _projectorShard;
+        public PromptProjectorManager(IActorRef projectorShard)
         {
-            _promptShard = promptShard;
+            _projectorShard = projectorShard;
             
             var mediator = DistributedPubSub.Get(Context.System).Mediator;
-            mediator.Tell(new Subscribe(PromptCreated, Self, GroupId));
-            mediator.Tell(new Subscribe(AnswerVoteIncreased, Self, GroupId));
-            mediator.Tell(new Subscribe(AnswerVoteDecreased, Self, GroupId));
-            Receive<IDomainEvent<PromptActor, PromptId, PromptCreated>>(evnt => _promptShard.Forward(evnt));
-            Receive<IDomainEvent<PromptActor, PromptId, AnswerVoteIncreased>>(evnt => _promptShard.Forward(evnt));
-            Receive<IDomainEvent<PromptActor, PromptId, AnswerVoteDecreased>>(evnt => _promptShard.Forward(evnt));
+            mediator.Tell(new Subscribe(ProjectionConstants.PromptCreated, Self, ProjectionConstants.GroupId));
+            mediator.Tell(new Subscribe(ProjectionConstants.AnswerVoteIncreased, Self, ProjectionConstants.GroupId));
+            mediator.Tell(new Subscribe(ProjectionConstants.AnswerVoteDecreased, Self, ProjectionConstants.GroupId));
+            Receive<ProjectedEvent<PromptCreated, PromptId>>(evnt => _projectorShard.Forward(evnt));
+            Receive<ProjectedEvent<AnswerVoteIncreased, PromptId>>(evnt => _projectorShard.Forward(evnt));
+            Receive<ProjectedEvent<AnswerVoteDecreased, PromptId>>(evnt => _projectorShard.Forward(evnt));
             Receive<SubscribeAck>(msg => Context.GetLogger().Info($"Successfully Subscribed to {msg.Subscribe.Topic}"));
         }
 
-        public static Props PropsFor(IActorRef promptShard)
+        public static Props PropsFor(IActorRef projectorShard)
         {
-            return Props.Create(() => new PromptProjectorManager(promptShard));
+            return Props.Create(() => new PromptProjectorManager(projectorShard));
         }
     }
 }

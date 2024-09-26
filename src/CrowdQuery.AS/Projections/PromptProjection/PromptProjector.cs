@@ -31,24 +31,24 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             _persistenceId = persistenceId;
             _replicator = DistributedData.Get(Context.System).Replicator;
             // Become(Project);
-            Command<IDomainEvent<PromptActor, PromptId, PromptCreated>>(msg =>
+            Command<ProjectedEvent<PromptCreated, PromptId>>(msg =>
             {
-                _logger.Info($"Received Domain Event PromptCreated for {msg.AggregateIdentity}");
+                _logger.Info($"Received Domain Event PromptCreated for {msg.AggregateId}");
                 var evnt = new ProjectionCreated(msg.AggregateEvent.Prompt, msg.AggregateEvent.Answers.ToDictionary(x => x, y => 0));
                 Persist(evnt, Handle);
                 DeferAsync(evnt, Defer);
             });
-            Command<IDomainEvent<PromptActor, PromptId, AnswerVoteIncreased>>(msg =>
+            Command<ProjectedEvent<AnswerVoteIncreased, PromptId>>(msg =>
             {
-                _logger.Info($"Received Domain Event AnswerVoteIncreased for {msg.AggregateIdentity}");
-                var evnt = new ProjectionAnswerIncreased(msg.AggregateEvent.Answer, msg.AggregateSequenceNumber);
+                _logger.Info($"Received Domain Event AnswerVoteIncreased for {msg.AggregateId}");
+                var evnt = new ProjectionAnswerIncreased(msg.AggregateEvent.Answer, msg.SequenceNumber);
                 Persist(evnt, Handle);
                 DeferAsync(evnt, Defer);
             });
-            Command<IDomainEvent<PromptActor, PromptId, AnswerVoteDecreased>>(msg =>
+            Command<ProjectedEvent<AnswerVoteDecreased, PromptId>>(msg =>
             {
-                _logger.Info($"Received Domain Event AnswerVoteDecreased for {msg.AggregateIdentity}");
-                var evnt = new ProjectionAnswerDecreased(msg.AggregateEvent.Answer, msg.AggregateSequenceNumber);
+                _logger.Info($"Received Domain Event AnswerVoteDecreased for {msg.AggregateId}");
+                var evnt = new ProjectionAnswerDecreased(msg.AggregateEvent.Answer, msg.SequenceNumber);
                 Persist(evnt, Handle);
                 DeferAsync(evnt, Defer);
             });
@@ -221,9 +221,14 @@ namespace CrowdQuery.AS.Projections.PromptProjection
 
         public override string? EntityId(object message)
         {
-            if (message is IDomainEvent<PromptActor, PromptId> prompt)
+            switch(message)
             {
-                return prompt.AggregateIdentity.ToPromptProjectorId();
+                case ProjectedEvent<PromptCreated, PromptId> prompt:
+                    return prompt.AggregateId.ToPromptProjectorId();
+                case ProjectedEvent<AnswerVoteIncreased, PromptId> increased:
+                    return increased.AggregateId.ToPromptProjectorId();
+                case ProjectedEvent<AnswerVoteDecreased, PromptId> decreased:
+                    return decreased.AggregateId.ToPromptProjectorId();
             }
 
             throw new Exception($"Could not get EntityId from type {message.GetType()}");

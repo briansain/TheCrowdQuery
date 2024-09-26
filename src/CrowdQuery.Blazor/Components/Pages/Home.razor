@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using System.Collections.Immutable
 @using CrowdQuery.AS.Projections.BasicPromptStateProjection
-@* @inject IRequiredActor<AllPromptsActor> allPromptsActor *@
+@inject IRequiredActor<BasicPromptStateProjector> basicProjector;
 @inject ILogger<Home> _logger
 <PageTitle>Home</PageTitle>
 <div class="d-flex flex-column">
@@ -49,15 +49,15 @@
     @*done loading stuff*@
 </div>
 @code {
-    private IActorRef _allPromptsActor = ActorRefs.Nobody;
+    private IActorRef _promptActor = ActorRefs.Nobody;
     private bool isLoaded = false;
     private Dictionary<string, BasicPromptState> dataItems = new Dictionary<string, BasicPromptState>();
     protected async override Task OnInitializedAsync()
     {
         _logger.LogDebug("Starting OnInitializedAsync");
         await Task.Delay(1000);
-        @* _allPromptsActor = await allPromptsActor.GetAsync(); *@
-        var response = await _allPromptsActor.Ask<Dictionary<string, BasicPromptState>>(new GetBasicPromptState());
+        _promptActor = await basicProjector.GetAsync();
+        var response = await _promptActor.Ask<Dictionary<string, BasicPromptState>>(new GetBasicPromptState());
         _logger.LogDebug($"Received response from AllPromptsActor: {string.Join(", ", response.Values.Select(r => r.prompt))}");
         dataItems = new Dictionary<string, BasicPromptState>(response);
         isLoaded = true;

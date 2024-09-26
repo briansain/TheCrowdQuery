@@ -1,4 +1,5 @@
 ﻿using Akka.Actor;
+using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Event;
 using Akkatecture.Aggregates;
 using Akkatecture.Aggregates.CommandResults;
@@ -6,6 +7,7 @@ using CrowdQuery.AS.Actors.Prompt.Commands;
 using CrowdQuery.AS.Actors.Prompt.Events;
 using CrowdQuery.AS.Actors.Prompt.Query;
 using CrowdQuery.AS.Actors.Prompt.Specification;
+using CrowdQuery.AS.Projections;
 
 namespace CrowdQuery.AS.Actors.Prompt
 {
@@ -31,7 +33,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Creating new Prompt: {command.Prompt}");
 				var evnt = new PromptCreated(command.Prompt, command.Answers);
 				Emit(evnt);
-				
+				DeferAsync(evnt, NotifyPubSub);
 				Sender.Tell(CommandResult.SucceedWith(command));
 				return true;
 			}
@@ -48,6 +50,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Increasing Answer Vote");
 				var evnt = new AnswerVoteIncreased(command.Answer);
 				Emit(evnt);
+				DeferAsync(evnt, NotifyPubSub);
 			}
 			else
 			{
@@ -68,6 +71,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Increasing Answer Vote");
 				var evnt = new AnswerVoteDecreased(command.Answer);
 				Emit(evnt);
+				DeferAsync(evnt, NotifyPubSub);
 			}
 			else
 			{
@@ -78,6 +82,30 @@ namespace CrowdQuery.AS.Actors.Prompt
 				Sender.Tell(CommandResult.FailWith(command, errors));
 			}
 			return true;
+		}
+
+        private void NotifyPubSub(PromptCreated evnt)
+		{
+			var projectedEvent = new ProjectedEvent<PromptCreated, PromptId>(evnt, Id, Version);
+			var pubSub = DistributedPubSub.Get(Context.System);
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.PromptCreated, projectedEvent, true));
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.PromptCreated, projectedEvent, false));
+		}
+
+		private void NotifyPubSub(AnswerVoteIncreased evnt)
+		{
+			var projectedEvent = new ProjectedEvent<AnswerVoteIncreased, PromptId>(evnt, Id, Version);
+			var pubSub = DistributedPubSub.Get(Context.System);
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteIncreased, projectedEvent, true));
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteIncreased, projectedEvent, false));
+		}
+
+		private void NotifyPubSub(AnswerVoteDecreased evnt)
+		{			
+			var projectedEvent = new ProjectedEvent<AnswerVoteDecreased, PromptId>(evnt, Id, Version);
+			var pubSub = DistributedPubSub.Get(Context.System);
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteDecreased, projectedEvent, true));
+			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteDecreased, projectedEvent, false));
 		}
 
 		public bool Execute(QueryPromptState command)

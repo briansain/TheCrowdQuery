@@ -4,6 +4,7 @@ using Akka.Cluster.Sharding;
 using Akka.Event;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
+using Akka.Persistence.Sql.Config;
 using Akka.Persistence.Sql.Hosting;
 using Akka.Remote.Hosting;
 using Akkatecture.Clustering;
@@ -46,7 +47,26 @@ public static class ServiceCollectionExtension
                 configLoggers.ClearLoggers();
                 configLoggers.AddLogger<SerilogLogger>();
             })
-            .WithSqlPersistence(config.ConnectionString, ProviderName.PostgreSQL15)
+            .WithSqlPersistence(config.ConnectionString, ProviderName.PostgreSQL)
+            .WithSqlPersistence(journalOptions =>
+            {
+                journalOptions.ProviderName = ProviderName.PostgreSQL;
+                journalOptions.ConnectionString = config.ConnectionString;
+                journalOptions.Identifier = "sharding-journal";
+                journalOptions.DatabaseOptions = new JournalDatabaseOptions(DatabaseMapping.PostgreSql);
+                journalOptions.DatabaseOptions.JournalTable = JournalTableOptions.PostgreSql;
+                journalOptions.DatabaseOptions.JournalTable.TableName = "ShardingEventJournal";
+                journalOptions.TagStorageMode = TagMode.TagTable;
+            },
+            snapshotOptions =>
+            {
+                snapshotOptions.ProviderName = ProviderName.PostgreSQL;
+                snapshotOptions.ConnectionString = config.ConnectionString;
+                snapshotOptions.Identifier = "sharding-snapshot";
+                snapshotOptions.DatabaseOptions = new SnapshotDatabaseOptions(DatabaseMapping.PostgreSql);
+                snapshotOptions.DatabaseOptions.SnapshotTable = SnapshotTableOptions.PostgreSql;
+                snapshotOptions.DatabaseOptions.SnapshotTable.TableName = "ShardingSnapshotStore";
+            }, false)
             .WithRemoting("localhost", 5110)
             .WithClustering(new ClusterOptions()
             {
@@ -62,6 +82,17 @@ public static class ServiceCollectionExtension
                 }
 
             })
+            .WithShardRegion<PromptProjector>(
+                typeof(PromptProjector).Name,
+                persistenceId => PromptProjector.PropsFor(persistenceId, promptProjectionConfiguration),
+                new PromptProjectorMessageExtractor(100),
+                new ShardOptions()
+                {
+                    JournalPluginId = "akka.persistence.journal.sharding-journal",
+                    SnapshotPluginId = "akka.persistence.snapshot-store.sharding-snapshot",
+                    Role = ClusterConstants.ProjectionNode
+                }
+            )
             .WithActors((actorSystem, registry) =>
             {
                 var clusterSharding = ClusterSharding.Get(actorSystem);
@@ -72,29 +103,10 @@ public static class ServiceCollectionExtension
                     new MessageExtractor<PromptActor, PromptId>(100));
                 registry.Register<PromptManager>(promptManagerShard);
 
-                IActorRef promptProjectorShard = ActorRefs.Nobody;
-                if (roles.Contains(ClusterConstants.ProjectionNode))
-                {
-                    promptProjectorShard = clusterSharding.Start(
-                        typeof(PromptProjector).Name,
-                        persistenceId => PromptProjector.PropsFor(persistenceId, promptProjectionConfiguration),
-                        clusterSharding.Settings.WithRole(ClusterConstants.ProjectionNode),
-                        new PromptProjectorMessageExtractor(100)
-                    );
-
-                    var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(promptProjectorShard), "projection-manager");
-                    registry.Register<PromptProjectorManager>(promptProjectorManager);
-                }
-                else
-                {
-                    promptProjectorShard = clusterSharding.StartProxy(
-                        typeof(PromptProjector).Name,
-                        ClusterConstants.ProjectionProxyNode,
-                        new PromptProjectorMessageExtractor(100)
-                    );
-                }
-                registry.Register<PromptProjector>(promptProjectorShard);
-
+                var projectorShard = registry.Get<PromptProjector>();
+                var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(projectorShard), "projection-manager");
+                registry.Register<PromptProjectorManager>(promptProjectorManager);
+                
                 var promptBasicStateProjector = actorSystem.ActorOf(BasicPromptStateProjector.PropsFor(promptBasicStateProjectorConfiguration), "basic-prompt-projector");
                 registry.Register<BasicPromptStateProjector>(promptBasicStateProjector);
             });
