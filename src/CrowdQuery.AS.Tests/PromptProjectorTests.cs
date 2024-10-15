@@ -18,14 +18,14 @@ namespace CrowdQuery.AS.Tests
 	public class PromptProjectorTests : TestKit
 	{
 		private readonly TestProbe _testProbe;
-		private PromptProjectionConfiguration _config;
+		private Configuration _config;
 		public PromptProjectorTests() : base(ConfigurationFactory.ParseString(
 			@"	akka.loglevel = DEBUG
             	akka.actor.provider = cluster")
 			.WithFallback(DistributedData.DefaultConfig()))
 		{
 			_testProbe = CreateTestProbe();
-			_config = new PromptProjectionConfiguration(1);
+			_config = new Configuration(1);
 		}
 
 		[Fact]

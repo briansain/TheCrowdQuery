@@ -3,9 +3,9 @@
 @using CrowdQuery.AS.Projections.BasicPromptStateProjection
 @inject IRequiredActor<BasicPromptStateProjector> basicProjector;
 @inject ILogger<Home> _logger
+
 <PageTitle>Home</PageTitle>
 <div class="d-flex flex-column">
-    @* <MudText Typo="Typo.h1">Welcome to The Crowd Query!</MudText> *@
     <MudText Typo="Typo.h2" class="ma-12 text-center">Welcome to The Crowd Query!</MudText>
     <MudText Typo="Typo.body1" class="text-center">Join a survey or create one</MudText>
     <MudPaper Elevation="2" class="ma-12 pa-8">
@@ -43,10 +43,6 @@
             </MudDataGrid>
         }
     </MudPaper>
-    @* <MudText Typo="Typo.h3">Welcome to The Crowd Query!</MudText> *@
-    @* <MudText Typo="Typo.h4">Welcome to The Crowd Query!</MudText> *@
-    @*loading stuff....*@
-    @*done loading stuff*@
 </div>
 @code {
     private IActorRef _promptActor = ActorRefs.Nobody;

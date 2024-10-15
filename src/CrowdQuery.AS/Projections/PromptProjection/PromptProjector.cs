@@ -1,31 +1,31 @@
 using System.Reactive.Linq;
 using Akka.Actor;
 using Akka.Cluster;
-using Akka.Cluster.Sharding;
 using Akka.DistributedData;
 using Akka.Event;
 using Akka.Logger.Serilog;
 using Akka.Persistence;
 using Akka.Streams;
 using Akka.Streams.Dsl;
-using Akkatecture.Aggregates;
 using CrowdQuery.AS.Actors.Prompt;
 using CrowdQuery.AS.Actors.Prompt.Events;
 using CrowdQuery.AS.Projections.BasicPromptStateProjection;
 
 namespace CrowdQuery.AS.Projections.PromptProjection
 {
+    public record State(string Prompt, Dictionary<string, int> Answers, long LastSequenceNumber){ }
+
     public class PromptProjector : ReceivePersistentActor
     {
         private readonly string _persistenceId;
         public override string PersistenceId => _persistenceId;
-        private PromptProjectionState _state = new(string.Empty, new Dictionary<string, int>(), -1);
+        private State _state = new(string.Empty, new Dictionary<string, int>(), -1);
         private readonly HashSet<IActorRef> _subscribers = new HashSet<IActorRef>();
         private IActorRef _debouncer = ActorRefs.Nobody;
-        private readonly PromptProjectionConfiguration _config;
+        private readonly Configuration _config;
         private ILoggingAdapter _logger => Context.GetLogger();
         private IActorRef _replicator = ActorRefs.Nobody;
-        public PromptProjector(string persistenceId, PromptProjectionConfiguration config)
+        public PromptProjector(string persistenceId, Configuration config)
         {
             _logger.Debug("Constructing PromptProjector");
             _config = config;
@@ -83,6 +83,7 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             Recover<ProjectionCreated>(Handle);
             Recover<ProjectionAnswerIncreased>(Handle);
             Recover<ProjectionAnswerDecreased>(Handle);
+            Command<SoftStop>(msg => _logger.Debug("Received SoftStop"));
             // Command<Rebuild>(msg => {
             //     Become(Rebuilding);
             //     Self.Tell(msg);
@@ -90,7 +91,8 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         }
         private void Defer(IProjectorEvent evnt)
         {
-            _debouncer.Tell(_state);
+            _logger.Debug($"PromptProjector-Defer: {_subscribers.Count}");
+            _debouncer.Tell(UpdateSubscribers.Instance);
             _replicator.Tell(Dsl.Update(
                 BasicPromptStateProjector.Key,
                 LWWDictionary<string, BasicPromptState>.Empty,
@@ -102,16 +104,46 @@ namespace CrowdQuery.AS.Projections.PromptProjection
                 }
             ));
         }
-        
-        public static Props PropsFor(string persistenceId, PromptProjectionConfiguration? config = null)
+
+        public override void AroundPostStop()
         {
-            config ??= new PromptProjectionConfiguration();
+            _logger.Debug($"Around PostStop");
+            base.AroundPostStop();
+        }
+
+        protected override void PostRestart(Exception reason)
+        {
+            _logger.Debug("PostRestart");
+            base.PostRestart(reason);
+        }
+
+        protected override void OnPersistFailure(Exception cause, object @event, long sequenceNr)
+        {
+            _logger.Debug("OnPersistFailure");
+            base.OnPersistFailure(cause, @event, sequenceNr);
+        }
+
+        protected override void OnRecoveryFailure(Exception reason, object? message = null)
+        {
+            _logger.Debug("OnRecoveryFaiture");
+            base.OnRecoveryFailure(reason, message);
+        }
+
+        protected override bool AroundReceive(Receive receive, object message)
+        {
+            _logger.Debug($"PromptProjector received message: {message.GetType()}");
+            return base.AroundReceive(receive, message);
+        }
+
+        public static Props PropsFor(string persistenceId, Configuration? config = null)
+        {
+            config ??= new Configuration();
             return Props.Create(() => new PromptProjector(persistenceId, config));
         }
 
         public override void AroundPreStart()
         {
-            var (actorRef, src) = Source.ActorRef<PromptProjectionState>(0, OverflowStrategy.DropHead)
+            var (actorRef, src) = Source.ActorRef<UpdateSubscribers>(0, OverflowStrategy.DropHead)
                 .PreMaterialize(Context.System);
             _debouncer = actorRef;
 
@@ -122,11 +154,12 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             base.AroundPreStart();
         }
 
-        public void NotifySubscribers(PromptProjectionState state)
+        private void NotifySubscribers(UpdateSubscribers _)
         {
+            _logger.Debug("NotifySubscribers");
             foreach (var subscriber in _subscribers)
             {
-                subscriber.Tell(state);
+                subscriber.Tell(_state);
             }
         }
 
@@ -160,39 +193,6 @@ namespace CrowdQuery.AS.Projections.PromptProjection
                 _logger.Warning($"Received sequenceNumber {evnt.PromptSequenceNumber} but lastSequenceNumber is {_state.LastSequenceNumber}");
             }
         }
-
-        // public void Rebuilding()
-        // {
-        //     Command<Rebuild>(msg => {
-        //         var source = PersistenceQuery.Get(Context.System)
-        //             .ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier)
-        //             .CurrentEventsByPersistenceId(_persistenceId.Replace("projector-", ""), 0, msg.SequenceNumberTo);
-        //         source.RunForeach(eventEnvelope =>
-        //         {
-        //                 if (eventEnvelope.Event is IDomainEvent<PromptActor, PromptId, PromptCreated> promptCreated)
-        //                 {
-        //                     Handle(new ProjectionCreated(promptCreated.AggregateEvent.Prompt, promptCreated.AggregateEvent.Answers.ToDictionary(x => x, y => 0)));
-        //                 }
-        //                 else if (eventEnvelope.Event is IDomainEvent<PromptActor, PromptId, AnswerVoteDecreased> voteDecreased)
-        //                 {
-        //                     Handle(new ProjectionAnswerDecreased(voteDecreased.AggregateEvent.Answer, voteDecreased.AggregateSequenceNumber));
-        //                 }
-        //                 else if (eventEnvelope.Event is IDomainEvent<PromptActor, PromptId, AnswerVoteIncreased> voteIncreased)
-        //                 {
-        //                     Handle(new ProjectionAnswerIncreased(voteIncreased.AggregateEvent.Answer, voteIncreased.AggregateSequenceNumber));
-        //                 }
-        //                 throw new Exception($"Could not map event {eventEnvelope.Event.GetType()} for Prompt Projector");
-        //         }, Context.System).PipeTo(Self, ActorRefs.Nobody, success: () => new RebuildComplete(), failure: e => new RebuildFailed(e));
-        //     });
-        //     Command<RebuildComplete>(_ => {
-        //         // need to delete current EJ
-        //         // need to hard reset state
-        //         // need to save snapshot
-        //     });
-        //     Command<RebuildFailed>(_ => {
-        //         // log failure
-        //     });
-        // }
     }
 
     public static class PromptProjectorExtensions
@@ -201,42 +201,6 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         internal static PromptId ToPromptId(this string input) => PromptId.With(input.Replace("projector-", ""));
     }
 
-    public record PromptProjectionState(string Prompt, Dictionary<string, int> Answers, long LastSequenceNumber){ }
-    public record Rebuild(long SequenceNumberTo);
-    public record RebuildComplete();
-    public record RebuildFailed(Exception e);
-    public class PromptProjectionConfiguration
-    {
-        public int DebouceTimerMilliseconds { get; set; }
-        public PromptProjectionConfiguration(int debounceTimerSeconds = 5000)
-        {
-            DebouceTimerMilliseconds = debounceTimerSeconds;
-        }
-    }
+    public class SoftStop() {}
 
-    public class PromptProjectorMessageExtractor : HashCodeMessageExtractor
-    {
-        public PromptProjectorMessageExtractor(int maxNumberOfShards) : base(maxNumberOfShards)
-        {
-        }
-
-        public override string? EntityId(object message)
-        {
-            switch(message)
-            {
-                case ProjectedEvent<PromptCreated, PromptId> prompt:
-                    return prompt.AggregateId.ToPromptProjectorId();
-                case ProjectedEvent<AnswerVoteIncreased, PromptId> increased:
-                    return increased.AggregateId.ToPromptProjectorId();
-                case ProjectedEvent<AnswerVoteDecreased, PromptId> decreased:
-                    return decreased.AggregateId.ToPromptProjectorId();
-                case AddSubscriber addSubscriber:
-                    return addSubscriber.EntityId;
-                case RemoveSubscriber removeSubscriber:
-                    return removeSubscriber.EntityId;
-            }
-
-            throw new Exception($"Could not get EntityId from type {message.GetType()}");
-        }
-    }
 }

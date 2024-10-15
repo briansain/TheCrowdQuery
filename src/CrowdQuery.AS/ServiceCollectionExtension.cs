@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Akka.Cluster.Hosting;
 using Akka.Cluster.Sharding;
+using Akka.Configuration;
 using Akka.Event;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
@@ -25,7 +26,7 @@ public static class ServiceCollectionExtension
         var config = new CrowdQueryAkkaConfiguration();
         configuration.Bind("Akka", config);
 
-        var promptProjectionConfiguration = new PromptProjectionConfiguration();
+        var promptProjectionConfiguration = new Projections.PromptProjection.Configuration();
         configuration.Bind("CrowdQuery:PromptProjection", promptProjectionConfiguration);
         services.AddSingleton(promptProjectionConfiguration);
 
@@ -40,7 +41,9 @@ public static class ServiceCollectionExtension
 
         services.AddAkka("crowd-query", builder =>
         {
-            builder.ConfigureLoggers(configLoggers =>
+            builder
+            .AddHocon(ConfigurationFactory.ParseString("akka.cluster.sharding.verbose-debug-logging=true"), HoconAddMode.Append)
+            .ConfigureLoggers(configLoggers =>
             {
                 configLoggers.LogLevel = LogLevel.DebugLevel;
                 configLoggers.LogConfigOnStart = true;
@@ -90,23 +93,37 @@ public static class ServiceCollectionExtension
                 {
                     JournalPluginId = "akka.persistence.journal.sharding-journal",
                     SnapshotPluginId = "akka.persistence.snapshot-store.sharding-snapshot",
+                    Role = ClusterConstants.ProjectionNode,
+                    PassivateIdleEntityAfter = TimeSpan.FromMinutes(5)
+                    // HandOffStopMessage = new SoftStop()
+                }
+            )
+            .WithShardRegion<PromptActor>(
+                typeof(PromptActor).Name, 
+                persistenceId => PromptActor.PropsFor(persistenceId),
+                new MessageExtractor<PromptActor, PromptId>(100),
+                new ShardOptions()
+                {
+                    JournalPluginId = "akka.persistence.journal.sharding-journal",
+                    SnapshotPluginId = "akka.persistence.snapshot-store.sharding-snapshot",
                     Role = ClusterConstants.ProjectionNode
+
                 }
             )
             .WithActors((actorSystem, registry) =>
             {
-                var clusterSharding = ClusterSharding.Get(actorSystem);
-                var promptManagerShard = clusterSharding.Start(
-                    typeof(PromptManager).Name,
-                    Props.Create(() => new ClusterParentProxy(PromptManager.PropsFor(), false)),
-                    clusterSharding.Settings.WithRole(ClusterConstants.MainNode),
-                    new MessageExtractor<PromptActor, PromptId>(100));
-                registry.Register<PromptManager>(promptManagerShard);
+                // var clusterSharding = ClusterSharding.Get(actorSystem);
+                // var promptManagerShard = clusterSharding.Start(
+                //     typeof(PromptManager).Name,
+                //     Props.Create(() => new ClusterParentProxy(PromptManager.PropsFor(), false)),
+                //     clusterSharding.Settings.WithRole(ClusterConstants.MainNode),
+                //     new MessageExtractor<PromptActor, PromptId>(100));
+                // registry.Register<PromptManager>(promptManagerShard);
 
                 var projectorShard = registry.Get<PromptProjector>();
                 var promptProjectorManager = actorSystem.ActorOf(PromptProjectorManager.PropsFor(projectorShard), "projection-manager");
                 registry.Register<PromptProjectorManager>(promptProjectorManager);
-                
+
                 var promptBasicStateProjector = actorSystem.ActorOf(BasicPromptStateProjector.PropsFor(promptBasicStateProjectorConfiguration), "basic-prompt-projector");
                 registry.Register<BasicPromptStateProjector>(promptBasicStateProjector);
             });

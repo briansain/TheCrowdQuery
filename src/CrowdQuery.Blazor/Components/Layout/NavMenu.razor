@@ -2,20 +2,13 @@
 
 
 <MudAppBar>
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
-    The Crowd Query
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudButton class="normal-case" Href="/" Variant="Variant.Text" Color="Color.Transparent">The Crowd Query</MudButton>
 </MudAppBar>
 <MudDrawer @bind-Open="@_drawerOpen" Elevation="2">
     <MudNavMenu>
-        <MudNavLink Href="/Prompt/add" Match="NavLinkMatch.All">Add Prompt</MudNavLink>
         <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-        <MudNavLink Href="/servers" Match="NavLinkMatch.Prefix">Servers</MudNavLink>
-        <MudNavGroup Title="Settings" Expanded="true">
-            <MudNavLink Href="/users"  Match="NavLinkMatch.Prefix">Users</MudNavLink>
-            <MudNavLink Href="/security"  Match="NavLinkMatch.Prefix">Security</MudNavLink>
-        </MudNavGroup>
+        <MudNavLink Href="/Prompt/add" Match="NavLinkMatch.All">Add Prompt</MudNavLink>
         <MudNavLink Href="/about"  Match="NavLinkMatch.Prefix">About</MudNavLink>
     </MudNavMenu>
 </MudDrawer>

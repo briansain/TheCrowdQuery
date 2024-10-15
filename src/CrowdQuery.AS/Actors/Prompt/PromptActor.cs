@@ -25,6 +25,11 @@ namespace CrowdQuery.AS.Actors.Prompt
 			logging = Context.GetLogger();
 		}
 
+		public static Props PropsFor(string aggregateId)
+		{
+			return Props.Create(() => new PromptActor(PromptId.With(aggregateId)));
+		}
+
 		public bool Execute(CreatePrompt command)
 		{
 			if (IsNewSpec.IsSatisfiedBy(IsNew))
@@ -50,6 +55,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Increasing Answer Vote");
 				var evnt = new AnswerVoteIncreased(command.Answer);
 				Emit(evnt);
+				Sender.Tell(CommandResult.SucceedWith(command));
 				DeferAsync(evnt, NotifyPubSub);
 			}
 			else
@@ -71,6 +77,7 @@ namespace CrowdQuery.AS.Actors.Prompt
 				logging.Info($"Increasing Answer Vote");
 				var evnt = new AnswerVoteDecreased(command.Answer);
 				Emit(evnt);
+				Sender.Tell(CommandResult.SucceedWith(command));
 				DeferAsync(evnt, NotifyPubSub);
 			}
 			else

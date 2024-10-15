@@ -1,24 +1,45 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider Theme="MyCustomTheme"/>
+
+<MudThemeProvider Theme="primaryTheme" IsDarkMode="true" />
 @code{
-    MudTheme MyCustomTheme = new MudTheme()
+    MudTheme primaryTheme = new MudTheme()
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = Colors.Blue.Default,
-            Secondary = Colors.Teal.Accent4,
-            AppbarBackground = Colors.Green.Default,
+            Primary = Colors.Blue.Darken1,
+            PrimaryLighten = Colors.Blue.Default,
+            PrimaryDarken = Colors.Blue.Darken2,
+
+            Secondary = Colors.Amber.Darken1,
+            SecondaryLighten = Colors.Amber.Default,
+            SecondaryDarken = Colors.Amber.Darken2,
+
+            Info = Colors.LightGreen.Default,
+            Success = Colors.Blue.Default,
+
+            AppbarBackground = Colors.Green.Darken2
         },
         PaletteDark = new PaletteDark()
         {
-            Primary = Colors.Blue.Lighten1
+            Primary = Colors.Blue.Darken1,
+            PrimaryLighten = Colors.Blue.Default,
+            PrimaryDarken = Colors.Blue.Darken2,
+
+            Secondary = Colors.Amber.Darken1,
+            SecondaryLighten = Colors.Amber.Default,
+            SecondaryDarken = Colors.Amber.Darken2,
+
+            Info = Colors.LightGreen.Default,
+            Success = Colors.Blue.Default,
+
+            AppbarBackground = Colors.Green.Darken2
         },
 
         LayoutProperties = new LayoutProperties()
         {
             DrawerWidthLeft = "260px",
-            DrawerWidthRight = "300px"
+            DrawerWidthRight = "260px"
         }
     };
 }
@@ -28,7 +49,9 @@
 <MudLayout>
     <NavMenu />
     <MudMainContent>
-        @Body
+        <div class="">
+            @Body
+        </div>
     </MudMainContent>
 </MudLayout>
 
@@ -43,5 +66,23 @@
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+    private ThemeManagerTheme _themeManager = new ThemeManagerTheme();
+    public bool _themeManagerOpen = false;
+
+    void OpenThemeManager(bool value)
+    {
+        _themeManagerOpen = value;
+    }
+
+    void UpdateTheme(ThemeManagerTheme value)
+    {
+        _themeManager = value;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
     }
 }

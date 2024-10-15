@@ -65,7 +65,8 @@ namespace CrowdQuery.AS.Tests
 			this.FixtureFor<PromptActor, PromptId>(PromptId)
 				.Given(new PromptCreated("Are you there?", ["Yes", "No"]))
 				.When(new IncreaseAnswerVote(PromptId, "Yes"))
-				.ThenExpectDomainEvent<AnswerVoteIncreased>(x => x.AggregateEvent.Answer == "Yes");
+				.ThenExpectDomainEvent<AnswerVoteIncreased>(x => x.AggregateEvent.Answer == "Yes")
+				.ThenExpectReply<SuccessCommandResult>();
 		}
 
 		[Fact]
@@ -107,7 +108,8 @@ namespace CrowdQuery.AS.Tests
 			this.FixtureFor<PromptActor, PromptId>(PromptId)
 				.Given(new PromptCreated("Are you there?", ["Yes", "No"]), new AnswerVoteIncreased("Yes"))
 				.When(new DecreaseAnswerVote(PromptId, "Yes"))
-				.ThenExpectDomainEvent<AnswerVoteDecreased>(x => x.AggregateEvent.Answer == "Yes");
+				.ThenExpectDomainEvent<AnswerVoteDecreased>(x => x.AggregateEvent.Answer == "Yes")
+				.ThenExpectReply<SuccessCommandResult>();
 		}
 
 		[Fact]
@@ -139,7 +141,7 @@ namespace CrowdQuery.AS.Tests
 		}
 
 		[Fact]
-		public void Command_IncreaseAnswerVote_EmitAnswerVoteDecreased_NotifiesPubSub()
+		public void Command_DecreaseAnswerVote_EmitAnswerVoteDecreased_NotifiesPubSub()
 		{
 			var testProbe = CreateTestProbe();
 			DistributedPubSub.Get(Sys).Mediator.Tell(new Subscribe(ProjectionConstants.AnswerVoteDecreased, testProbe), testProbe);

@@ -51,7 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Projections/" />
     <Folder Include="ResponseModels\" />
   </ItemGroup>
 

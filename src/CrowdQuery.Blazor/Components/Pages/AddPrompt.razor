@@ -1,39 +1,54 @@
 ﻿@page "/prompt/add"
 @using Akkatecture.Aggregates.CommandResults
-@inject IRequiredActor<PromptManager> _PromptManager
+@inject IRequiredActor<PromptActor> promptActorShard;
 @inject ILogger<AddPrompt> _logger
 @inject NavigationManager _navigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Add Prompt</PageTitle>
-<MudPaper class="pa-16 ma-10 d-flex flex-wrap flex-column">
-	<MudText Typo="Typo.h3">What's your Prompt?</MudText>
-	<MudTextField T="string" @ref="PromptElement" @bind-Value="Prompt" Label="Prompt" Variant="Variant.Outlined"
-		Validation="@((string quest) => ValidatePrompt(quest))">
-	</MudTextField>
-	<div class="d-flex flex-wrap">
-		@for (var i = 0; i < answers.Count; i++)
-		{
-			int index = i;
-			<div class="pa-5 flex-25">
-				<MudTextField T="string" Counter="256" Immediate="true" Validation="@((string ans) => ValidateAnswers(ans))"
-					@ref="answerElements[index]" class="flex-basis-100" @bind-Value="answers[index]" Label="Answer" />
-				<MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
-					OnClick="_ => answers.RemoveAt(index)" />
-				<MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="AddAnswer" />
-			</div>
-		}
-	</div>
-	<div class="d-flex justify-end">
-		<MudButton class="ma-1" Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
-		<MudButton class="ma-1" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit</MudButton>
-	</div>
+<MudPaper class="ma-6 pa-4">
+	<MudGrid>
+		<MudItem xs="12">
+			<MudText class="text-center" Typo="Typo.h4">What's your Prompt?</MudText>
+		</MudItem>
+		<MudItem xs="12">
+			<MudTextField Lines="3" T="string" @ref="PromptElement" @bind-Value="Prompt" Label="Prompt" Variant="Variant.Outlined"
+				Validation="@((string quest) => ValidatePrompt(quest))">
+			</MudTextField>
+		</MudItem>
+		@* <div class="d-flex flex-wrap"> *@
+			@for (var i = 0; i < answers.Count; i++)
+			{
+				int index = i;
+				@* <div class="pa-5 flex-25"> *@
+				<MudItem xs="12" sm="3">
+					<MudTextField AutoGrow="true" T="string" Counter="256" Immediate="true" Validation="@((string ans) => ValidateAnswers(ans))"
+						@ref="answerElements[index]" @bind-Value="answers[index]" Label="Answer" />
+					<MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
+						OnClick="_ => answers.RemoveAt(index)" />
+					<MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="AddAnswer" />
+				</MudItem>
+				@* </div> *@
+			}
+		@* </div> *@
+		@* <div class="d-flex justify-end"> *@
+		<MudFlexBreak />
+		<MudItem xs="12" class="d-flex justify-end">
+			<MudButton class="ma-1 object-center" Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+			<MudButton class="ma-1 object-center" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+		</MudItem>
+		@* </div> *@
+	</MudGrid>
 </MudPaper>
 
+<MudOverlay @bind-Visible="@overlayVisible" DarkBackground="true" ZIndex="9999" AutoClose="false">
+	<MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
+</MudOverlay>
 
 @code {
-	private IActorRef PromptManager = ActorRefs.Nobody;
-	[Inject] public required IDialogService DiaglogService { get; set; }
+	private bool overlayVisible = false;
+	private IActorRef PromptActorShard = ActorRefs.Nobody;
+	[Inject] public required IDialogService DialogService { get; set; }
 	private List<Action> actionsToRun = new List<Action>();
 	private Dictionary<int, MudTextField<string>> answerElements = new Dictionary<int, MudTextField<string>>();
 	private MudTextField<string> PromptElement = new MudTextField<string>();
@@ -42,8 +57,8 @@
 
 	protected async override Task OnInitializedAsync()
 	{
-		_logger.LogDebug("OnInitializedAsync");
-		PromptManager = await _PromptManager.GetAsync();
+		PromptActorShard = await promptActorShard.GetAsync();
+		await DialogService.ShowMessageBox("Error", "There was a problem with submitting your Prompt");
 	}
 
 	protected override void OnAfterRender(bool isFirstRender)
@@ -58,26 +73,23 @@
 	private void AddAnswer()
 	{
 		answers.Add(string.Empty);
-		_logger.LogDebug($"Count {answerElements.Count}");
 		actionsToRun.Add(() => answerElements[answers.Count - 1].FocusAsync());
 	}
 
 	private async void Cancel()
 	{
-		_logger.LogDebug("Cancel");
-		bool? result = await DiaglogService.ShowMessageBox("Warning", "Are you sure you want to cancel?", "Yes", "No");
+		bool? result = await DialogService.ShowMessageBox("Warning", "Are you sure you want to cancel?", "Yes", "No");
 		if (result == null || result == false)
 		{
-			_logger.LogDebug("falsey");
 			return;
 		}
-		_logger.LogDebug("truthy");
 
 		_navigationManager.NavigateTo("/");
 	}
 
 	private async void Submit()
 	{
+		overlayVisible = true;
 		var tasks = new List<Task>();
 		tasks.Add(PromptElement.Validate());
 		foreach (var a in answerElements)
@@ -89,16 +101,19 @@
 		if (!hasErrors)
 		{
 			var command = new CreatePrompt(PromptId.New, Prompt, answers);
-			var response = await PromptManager.Ask<CommandResult>(command);
+			var response = await PromptActorShard.Ask<CommandResult>(command);
+			await Task.Delay(3000);
 			if (response.IsSuccess)
 			{
 				_navigationManager.NavigateTo("/");
 			}
 			else
 			{
+				overlayVisible = false;
+				StateHasChanged();
 				var errResponse = (FailedCommandResult)response;
 				_logger.LogWarning($"Failed to submit Prompt because {string.Join(", ", errResponse.Errors)}");
-				await DiaglogService.ShowMessageBox("Error", "There was a problem with submitting your Prompt");
+				await DialogService.ShowMessageBox("Error", "There was a problem with submitting your Prompt");
 			}
 		}
 
@@ -118,11 +133,5 @@
 		{
 			yield return "Prompt cannot be emptpy";
 		}
-
 	}
 }
-
-
-
-
-@*Prompt-204d7f8e-18bc-4a8a-8ac8-16aa02122ae1*@
