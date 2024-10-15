@@ -27,11 +27,9 @@ namespace CrowdQuery.AS.Projections.PromptProjection
         private IActorRef _replicator = ActorRefs.Nobody;
         public PromptProjector(string persistenceId, Configuration config)
         {
-            _logger.Debug("Constructing PromptProjector");
             _config = config;
             _persistenceId = persistenceId;
             _replicator = DistributedData.Get(Context.System).Replicator;
-            // Become(Project);
             Command<ProjectedEvent<PromptCreated, PromptId>>(msg =>
             {
                 _logger.Info($"Received Domain Event PromptCreated for {msg.AggregateId}");
@@ -84,10 +82,6 @@ namespace CrowdQuery.AS.Projections.PromptProjection
             Recover<ProjectionAnswerIncreased>(Handle);
             Recover<ProjectionAnswerDecreased>(Handle);
             Command<SoftStop>(msg => _logger.Debug("Received SoftStop"));
-            // Command<Rebuild>(msg => {
-            //     Become(Rebuilding);
-            //     Self.Tell(msg);
-            // });
         }
         private void Defer(IProjectorEvent evnt)
         {

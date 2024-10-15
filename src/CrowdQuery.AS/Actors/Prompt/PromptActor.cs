@@ -34,7 +34,6 @@ namespace CrowdQuery.AS.Actors.Prompt
 		{
 			if (IsNewSpec.IsSatisfiedBy(IsNew))
 			{
-				// SANATIZE THE Prompt FOR SQL INJECTION AND SILLY HACKERS
 				logging.Info($"Creating new Prompt: {command.Prompt}");
 				var evnt = new PromptCreated(command.Prompt, command.Answers);
 				Emit(evnt);
@@ -96,7 +95,6 @@ namespace CrowdQuery.AS.Actors.Prompt
 			var projectedEvent = new ProjectedEvent<PromptCreated, PromptId>(evnt, Id, Version);
 			var pubSub = DistributedPubSub.Get(Context.System);
 			pubSub.Mediator.Tell(new Publish(ProjectionConstants.PromptCreated, projectedEvent, true));
-			pubSub.Mediator.Tell(new Publish(ProjectionConstants.PromptCreated, projectedEvent, false));
 		}
 
 		private void NotifyPubSub(AnswerVoteIncreased evnt)
@@ -104,7 +102,6 @@ namespace CrowdQuery.AS.Actors.Prompt
 			var projectedEvent = new ProjectedEvent<AnswerVoteIncreased, PromptId>(evnt, Id, Version);
 			var pubSub = DistributedPubSub.Get(Context.System);
 			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteIncreased, projectedEvent, true));
-			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteIncreased, projectedEvent, false));
 		}
 
 		private void NotifyPubSub(AnswerVoteDecreased evnt)
@@ -112,7 +109,6 @@ namespace CrowdQuery.AS.Actors.Prompt
 			var projectedEvent = new ProjectedEvent<AnswerVoteDecreased, PromptId>(evnt, Id, Version);
 			var pubSub = DistributedPubSub.Get(Context.System);
 			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteDecreased, projectedEvent, true));
-			pubSub.Mediator.Tell(new Publish(ProjectionConstants.AnswerVoteDecreased, projectedEvent, false));
 		}
 
 		public bool Execute(QueryPromptState command)
