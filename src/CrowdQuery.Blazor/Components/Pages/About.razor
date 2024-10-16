@@ -1,0 +1,88 @@
+@page "/about"
+
+
+<PageTitle>About </PageTitle>
+
+<MudText Typo="Typo.h3" class="text-center ma-6">About</MudText>
+<MudGrid style="word-wrap:break-word">
+    <MudItem xs="12" class="ma-6">
+        <MudText Typo="Typo.h5">Who Made This?:</MudText>
+        <MudText Typo="Typo.body1">My name is Brian Sain and I like to write code. I tend to get projects stuck in my head, so I used this website as an opportunity to share the coding technologies that I love and to start doing livestreams.
+            This is a simple survey tool where anyone can create surveys and anyone can vote on them. That's it. No personal data is needed or recorded and I don't care about tracking anyone. The only cookies and information we keep is for the benefit of the user, never to the detrement. I don't care about tracking anyone and I really don't want ads on this website. This is the first of many potential side projects I'll be releasing. I'll keep everything as transparent as possible. 
+        </MudText>
+    </MudItem>
+    
+    <MudItem xs="12" class="ma-6">
+        <MudText Typo="Typo.h5">Technology:</MudText>
+        <MudText Typo="Typo.body1">
+            Crowd Query uses a range of open-source technolgies, and this code base is 100% open-source as well. I started creating it to livestream and share my experience, but my desktop died so I had to stop livestreaming for now. Here's the technologies and architecture I used.
+        </MudText>
+        <ul style="columns:2;list-style:circle;" class="ma-6">
+            <li>Akka .Net</li>
+            <li>Akka.Persistence</li>
+            <li>Akka.Cluster</li>
+            <li>Akka.Streams</li>
+            <li>Akkatecture</li>
+            <li>Blazor</li>
+            <li>Mudblazor</li>
+            <li>Event Sourcing</li>
+            <li>Projections</li>
+        </ul>
+        <MudText Typo="Typo.body1">
+            The coolest part is that CrowdQuery does not have an API at all. With Blazor, websockets connect the client and the server and the state is updated via SignalR and websockets. The code can be found here if you're into that:
+            <MudIconButton Href="https://github.com/briansain/TheCrowdQuery" Target="_blank" Rel="noopener noreferrer" Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" aria-label="github" />
+        </MudText>
+    </MudItem>
+
+    <MudItem xs="12" class="pa-6 ma-6">
+        <MudText Typo="Typo.h5">Donations:</MudText>
+        <MudText Typo="Typo.body1">
+            Honestly, I can't fully sustain this website forever, and I really don't want ads at all, ever. I tried cutting costs as much as I can, but I do need some help. I'm accepting donations via the following links to help with hosting fees. Ko-Fi is a great platform that accepts most types of payments.eate a new page that will help track how much is received and where the money is going. I want to be as open and transparent and I can. If you're technically inclined, there's also some crypto wallets you can send coins to. If there is a way that you'd like to donate that is not currently available, please let me know and I'll look into adding it.
+        </MudText>
+        <MudGrid Justify="Justify.Center" class="ma-6 pa-6">
+            <MudItem xs="12" md="4">
+                <a href="https://ko-fi.com/sir_codesalot" target="_blank" rel="noopener noreferrer">
+                    <MudImage Fluid="true" Width="200" Src="kofi_logo.webp" ObjectFit="ObjectFit.Contain" Alt="Ko-Fi Donation Logo"/>
+                </a>
+            </MudItem>
+            <MudItem xs="12" md="3" class="d-flex flex-column">
+                <MudImage Height="200" Width="200" Fluid="true" Src="bitcoin_qr.png" Alt="Bitcoin Wallet Address" Elevation="25" Class="rounded-lg"/>
+                <MudText Typo="Typo.caption">Bitcoin Wallet Address: @bitcoinAddress</MudText>
+                <MudButton Variant="Variant.Outlined" style="width:100px" OnClick="CopyBitcoinAddress">Copy</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="3" class="d-flex flex-column">
+                <MudImage Height="200" Width="200" Fluid="true" Src="ether_qr.png" Alt="Etherium Wallet Address" Elevation="25" Class="rounded-lg"/>
+                <MudText style="word-break:break-all" Typo="Typo.caption">Etherium Wallet Address: @etheriumAddress </MudText>
+                <MudButton Variant="Variant.Outlined"  style="width: 100px" OnClick="CopyBitcoinAddress">Copy</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+
+@inject IJSRuntime JSRuntime
+@code {    
+    string bitcoinAddress = "3FH8MWt1Fh7aU5yUZ8z6ZnyzsMbPNKfV1S";
+    string etheriumAddress = "0xD916c35163AB90b1A81103fD49022057e6B6C70D";
+
+    private async Task CopyBitcoinAddress()
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", bitcoinAddress);
+    }
+    private async Task CopyEtheriumAddress()
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", etheriumAddress);
+    }
+}
+<script>
+    window.clipboardCopy = {
+        copyText: function(text) {
+            navigator.clipboard.writeText(text).then(function () {
+                alert("Copied to clipboard!");
+            })
+            .catch(function (error) {
+                alert(error);
+            });
+        }
+    };
+</script>

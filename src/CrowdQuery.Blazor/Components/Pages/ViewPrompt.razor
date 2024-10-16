@@ -1,0 +1,156 @@
+@page "/prompt/{promptId}"
+@using System.Collections.Immutable
+@using Akka.Streams
+@using Akka.Streams.Dsl
+@using Akkatecture.Aggregates.CommandResults
+@using CrowdQuery.AS.Projections
+@using CrowdQuery.AS.Projections.BasicPromptStateProjection
+@using CrowdQuery.AS.Projections.PromptProjection
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@implements IDisposable
+@inject ILogger<ViewPrompt> _logger
+@inject IRequiredActor<PromptProjector> promptProjector;
+@inject IRequiredActor<PromptActor> promptActor;
+@inject ActorSystem _actorSystem;
+@inject ProtectedLocalStorage protectedLocalStorage;
+
+<PageTitle>@_prompt?.Prompt</PageTitle>
+@if (_prompt != null)
+{
+    <MudPaper class="ma-6 pa-4" Elevation="2">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h3" xs="12" class="text-center">@_prompt.Prompt</MudText>
+                    </MudItem>
+
+                    @foreach (var keyPair in _prompt.Answers)
+                    {
+                        var v = keyPair;
+                        <MudItem xs="12" sm="3">
+                            <MudButton class="normal-case" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true"
+                                OnClick="async () => await Vote(v)" Disabled="@_hasVoted" >@v.Key</MudButton>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                @if (_hasVoted == true)
+                {
+                    <MudItem xs="12">
+                        <MudText class="text-center" Typo="Typo.h3">Results:</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudChart ChartType="ChartType.Donut" InputData="@data" InputLabels="@labels"></MudChart>
+                    </MudItem>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+else
+{
+    <h1>Loading</h1>
+}
+
+@code {
+    [Parameter] public string? promptId { get; set; }
+    [Inject] public required IDialogService DialogService { get; set; }
+    private AS.Projections.PromptProjection.State? _prompt;
+    private CancellationTokenSource _pageCancellationToken = new();
+    private string? _projectorId => promptId?.ToPromptId().ToPromptProjectorId();
+    private PromptId? _promptId => promptId?.ToPromptId();
+    private IActorRef? _promptActor;
+    private bool _hasVoted = false;
+    private double[]? data;
+    private string[]? labels;
+
+    protected async override Task OnInitializedAsync()
+    {
+        _logger.LogDebug($"OnInitialized");
+        var promptProjectorTask = promptProjector.GetAsync(_pageCancellationToken.Token);
+        var promptActorTask = promptActor.GetAsync(_pageCancellationToken.Token);
+        await Task.WhenAll([promptProjectorTask, promptActorTask]);
+
+        var _promptProjector = promptProjectorTask.Result;
+        _promptActor = promptActorTask.Result;
+
+        _logger.LogDebug($"Before RunSubscription {_promptProjector.Path}");
+        _ = RunSubscription(_promptProjector);
+        _logger.LogDebug($"Finished OnInitialized {_promptProjector.Path}");
+        await base.OnInitializedAsync();
+        _logger.LogDebug("Finished OnInitialized");
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender == true)
+        {
+            var hasVotedTask = await protectedLocalStorage.GetAsync<bool>(promptId!);
+            if (hasVotedTask.Success)
+            {
+                _logger.LogDebug($"Got HasVoted Local Storage: {promptId!}; {hasVotedTask.Value}");
+                _hasVoted = hasVotedTask.Value;
+                StateHasChanged();
+            }
+            else
+            {
+                _logger.LogDebug($"Failed HasVoted Local Storage: {promptId!}");
+            }
+        }
+    }
+
+    async Task RunSubscription(IActorRef promptProj)
+    {
+        try
+        {
+            var (actorRef, source) = Source
+                .ActorRef<AS.Projections.PromptProjection.State>(10, Akka.Streams.OverflowStrategy.DropHead)
+                .PreMaterialize(_actorSystem);
+            promptProj.Tell(new AddSubscriber(actorRef, _projectorId!));
+
+            await foreach (var result in source.RunAsAsyncEnumerable(_actorSystem).WithCancellation(_pageCancellationToken.Token))
+            {
+                _logger.LogDebug($"Projection State updated: {result.LastSequenceNumber}");
+                _prompt = result;
+                var ordered = result.Answers.OrderByDescending(a => a.Value);
+                data = ordered.Select(d => (double)d.Value).ToArray();
+                labels = ordered.Select(l => $"{l.Key} - {l.Value}").ToArray();
+                StateHasChanged();
+            }
+            actorRef.Tell(PoisonPill.Instance);
+            _logger.LogDebug("Finished RunSubscription");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"e.Message: {e.Message}; e.Source: {e.Source}");
+        }
+    }
+
+    public void Dispose()
+    {
+        _logger.LogDebug("Dispose");
+        _pageCancellationToken.Cancel();
+        _pageCancellationToken.Dispose();
+    }
+
+    private async Task Vote(KeyValuePair<string, int> vote)
+    {
+        var command = new IncreaseAnswerVote(_promptId!, vote.Key);
+        var response = await _promptActor.Ask<CommandResult>(command);
+        if (response.IsSuccess)
+        {
+            _hasVoted = true;
+            await protectedLocalStorage.SetAsync(promptId!, true);
+            _logger.LogDebug("SetAsync Called");
+            StateHasChanged();
+        }
+        else
+        {
+            var errResponse = (FailedCommandResult)response;
+            _logger.LogWarning($"Failed to submit vote because {string.Join(", ", errResponse.Errors)}");
+            await DialogService.ShowMessageBox("Error", "There was a problem with submitting your vote");
+        }
+    }
+}

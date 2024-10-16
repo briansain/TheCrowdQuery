@@ -1,0 +1,61 @@
+﻿@page "/"
+@using System.Collections.Immutable
+@using CrowdQuery.AS.Projections.BasicPromptStateProjection
+@inject IRequiredActor<BasicPromptStateProjector> basicProjector;
+@inject ILogger<Home> _logger
+
+<PageTitle>Home</PageTitle>
+<div class="d-flex flex-column">
+    <MudText Typo="Typo.h2" class="ma-12 text-center">Welcome to The Crowd Query!</MudText>
+    <MudText Typo="Typo.body1" class="text-center">Join a survey or create one</MudText>
+    <MudPaper Elevation="2" class="ma-12 pa-8">
+        @if (!isLoaded)
+        {
+            <div class="d-flex flex-column">
+                <MudSkeleton Height="150px" SkeletonType="SkeletonType.Text" Animation="Animation.Wave"></MudSkeleton>
+                <div style="height: 500px; width:100%" gap-4 class="d-flex flex-row">
+                    <MudSkeleton class="flex-auto ma-2" Height="100%" SkeletonType="SkeletonType.Rectangle"
+                        Animation="Animation.Wave">
+                    </MudSkeleton>
+                    <MudSkeleton class="flex-auto ma-2" Height="100%" SkeletonType="SkeletonType.Rectangle"
+                        Animation="Animation.Wave"></MudSkeleton>
+                    <MudSkeleton class="flex-auto ma-2" Height="100%" SkeletonType="SkeletonType.Rectangle"
+                        Animation="Animation.Wave"></MudSkeleton>
+                    <MudSkeleton class="flex-auto ma-2" Height="100%" SkeletonType="SkeletonType.Rectangle"
+                        Animation="Animation.Wave"></MudSkeleton>
+                </div>
+            </div>
+        }
+        else
+        {
+            <MudDataGrid T="KeyValuePair<string, BasicPromptState>" Items="@dataItems">
+                <Columns>
+                    <PropertyColumn Property="x => x.Value.prompt" Title="Survey Prompt"></PropertyColumn>
+                    <PropertyColumn Property="x => x.Value.answerCount" Title="Num of Choices"></PropertyColumn>
+                    <PropertyColumn Property="x => x.Value.totalVotes" Title="Total Votes"></PropertyColumn>
+                    <TemplateColumn>
+                        <CellTemplate>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                Href="@($"/prompt/{context.Item.Key}")">View</MudButton>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        }
+    </MudPaper>
+</div>
+@code {
+    private IActorRef _promptActor = ActorRefs.Nobody;
+    private bool isLoaded = false;
+    private Dictionary<string, BasicPromptState> dataItems = new Dictionary<string, BasicPromptState>();
+    protected async override Task OnInitializedAsync()
+    {
+        _logger.LogDebug("Starting OnInitializedAsync");
+        await Task.Delay(1000);
+        _promptActor = await basicProjector.GetAsync();
+        var response = await _promptActor.Ask<Dictionary<string, BasicPromptState>>(new GetBasicPromptState());
+        _logger.LogDebug($"Received response from AllPromptsActor: {string.Join(", ", response.Values.Select(r => r.prompt))}");
+        dataItems = new Dictionary<string, BasicPromptState>(response);
+        isLoaded = true;
+    }
+}
