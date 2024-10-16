@@ -74,7 +74,7 @@ public static class ServiceCollectionExtension
             .WithClustering(new ClusterOptions()
             {
                 Roles = roles,
-                SeedNodes = ["akka.tcp://crowd-query@localhost:5053"]
+                SeedNodes = ["akka.tcp://crowd-query@localhost:5110"]
             })
             .WithDistributedData(new DDataOptions()
             {
