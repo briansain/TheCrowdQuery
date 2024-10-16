@@ -6,7 +6,7 @@ COPY . .
 WORKDIR /source/CrowdQuery.Blazor
 RUN dotnet publish -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 as appstage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS appstage
 WORKDIR /app
 COPY --from=build /source/CrowdQuery.Blazor/out .
 ENTRYPOINT ["dotnet", "CrowdQuery.Blazor.dll"]
