@@ -1,0 +1,51 @@
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ISnackbar SnackbarService;
+@inject ProtectedLocalStorage ProtectedLocalStorage;
+<footer>
+
+</footer>
+
+@code {
+    private static string key = "agreeTOSandPrivaryPolicy";
+    [Inject] public required IDialogService DialogService { get; set; }
+    protected async override Task OnAfterRenderAsync(bool isFirstRender)
+    {
+        if (isFirstRender)
+        {
+            var hasAgreed = await ProtectedLocalStorage.GetAsync<bool>("agreeTOSandPrivaryPolicy");
+            if (!hasAgreed.Success || !hasAgreed.Value)
+            {
+                SnackbarService.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+                SnackbarService.Configuration.RequireInteraction = true;
+                SnackbarService.Add
+                (
+                    @<div>
+                        <p>By using this site, you agree to our <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="OpenTermsOfService">Terms of Service</MudButton> and <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="OpenPrivacyPolicy">Privacy Policy</MudButton>.
+                        </p>
+                        <p>
+                        We use browser storage to track agreements and voting.
+                        </p>
+                    </div>, configure: config => {
+                        config.Action = "Agree";
+                        config.ActionColor = Color.Primary;
+                        config.Onclick = async snackbar => 
+                        {
+                            await ProtectedLocalStorage.SetAsync(key, true);
+                        };
+                        config.HideIcon = true;
+                        config.RequireInteraction = true;
+                    }
+                );
+            }
+        }
+    }
+
+    private void OpenTermsOfService()
+    {
+        DialogService.ShowAsync<TermsOfService>("Terms of Service");
+    }
+    private void OpenPrivacyPolicy()
+    {
+        DialogService.ShowAsync<PrivacyPolicy>("Privacy Policy");
+    }
+}

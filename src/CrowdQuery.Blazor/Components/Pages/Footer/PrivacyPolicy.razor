@@ -1,0 +1,53 @@
+<MudDialog>
+    <TitleContent>
+        Terms of Service
+    </TitleContent>
+    <DialogContent>
+        Last updated: 2024-10-16
+
+        <h3>Summary:</h3>
+        <p>We do not collect personal data in this version of the platform.</p>
+        <p>We use browser persistent storage (localStorage) and cookies to track voting, prevent multiple votes, and store your agreement to our Terms of Service and Privacy Policy.</p>
+        <p>We are not sharing or selling any data to third parties.</p>
+
+        <h3>Full Privacy Policy:</h3>
+        <strong>1. Data Collection</strong>
+        <p>At this stage of CrowdQuery.app, we do not collect any personally identifiable information (PII) from users. You can create and participate in surveys without signing up for an account.</p>
+
+        <strong>2. Use of Browser Storage</strong>
+        <p>We use localStorage and cookies for the following purposes:</p>
+
+        <p>Voting Status: To track whether you have already voted on a specific survey and prevent multiple votes.</p>
+        <p>Security: We use cookies to protect the site from malicious activities.</p>
+        <p>Agreement Tracking: We store your acknowledgment of our Terms of Service and Privacy Policy in localStorage to prevent repeated prompts.</p>
+        <p>Persistent storage like localStorage is stored locally in your browser and does not automatically expire, unlike cookies. It is not shared with any third-party services or sent to our servers.</p>
+
+        <strong>3. Data Sharing</strong>
+        <p>CrowdQuery.app does not share or sell any user data to third parties. Since we do not collect personal data, no personal information is shared.</p>
+
+        <strong>4. Future Changes</strong>
+        <p>As we introduce new features (such as user accounts), we may collect additional information. If we do, this Privacy Policy will be updated, and you will be notified of any changes to data collection practices.</p>
+
+        <strong>5. Security</strong>
+        <p>We take reasonable measures to protect the integrity of the site and its content. While we do not store personal data, we maintain security protocols to protect the platform from malicious attacks.</p>
+
+        <strong>6. Third-Party Links</strong>
+        <p>CrowdQuery.app may contain links to third-party websites or services. We are not responsible for the privacy practices or content of these external sites.</p>
+
+        <strong>7. Changes to the Privacy Policy</strong>
+        <p>We may update this Privacy Policy as our platform evolves. The “Last Updated” date at the top will indicate when changes are made. Continued use of the platform after changes signifies your acceptance of the updated Privacy Policy.</p>
+
+        <strong>8. Contact Information</strong>
+        <p>If you have any questions or concerns about this Privacy Policy, please contact us at [Your Contact Information].</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance? MudDialog { get; set; }
+
+    private void Close() => MudDialog!.Close();
+}

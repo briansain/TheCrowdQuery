@@ -1,0 +1,69 @@
+<MudDialog>
+    <TitleContent>
+        Terms of Service
+    </TitleContent>
+    <DialogContent>
+        Last updated: 2024-10-16
+
+        <h3>Summary:</h3>
+        <strong>Survey Creation:</strong> You can create surveys and participate in voting. By using the platform, you agree to follow the rules regarding fair use.
+        <strong>No Liability:</strong> We are not responsible for the content of the surveys or any damages caused by using the site.
+        <strong>Changes:</strong> These terms may change as the platform evolves, especially as new features (e.g., user accounts) are introduced.
+        <strong>Accountability:</strong> We expect respectful and lawful use of our platform.
+        <br />
+        <br />
+        <h3>Full Terms of Service:</h3>
+        <strong>1. Acceptance of Terms</strong>
+        <p>By accessing or using CrowdQuery.app (“we,” “our,” or “us”), you agree to comply with and be bound by these Terms of Service. If you do not agree with these terms, you should not use our site.</p>
+
+        <strong>2. Description of Service</strong>
+        <p>CrowdQuery.app is a platform that allows users to create and participate in surveys. The service is free to use, but we may introduce premium features in the future.</p>
+
+        <strong>3. User Responsibilities</strong>
+        <p>By using CrowdQuery.app, you agree to:</p>
+
+        <p>Only create surveys that comply with all applicable laws and regulations.
+        Not submit content that is harmful, offensive, defamatory, or otherwise violates the rights of others.
+        Respect the integrity of the voting process (e.g., not attempt to manipulate voting outcomes).</p>
+        
+        <strong>4. Content Responsibility</strong>
+        <p>You are responsible for any surveys or content you create or participate in on the platform. CrowdQuery.app does not pre-screen surveys but reserves the right to remove any content that violates these terms or is otherwise objectionable.</p>
+
+        <strong>5. Limitation of Liability</strong>
+        <p>CrowdQuery.app is provided “as is” without any warranties, expressed or implied. We are not liable for any loss or damage resulting from:</p>
+
+        <p>The content of the surveys or user-generated content.
+        Technical issues, bugs, or downtime.
+        Any unauthorized access to our systems or data breaches.</p>
+        
+        <strong>6. Changes to the Service</strong>
+        <p>We reserve the right to modify or discontinue CrowdQuery.app at any time, with or without notice. This includes adding or removing features.</p>
+
+        <strong>7. Privacy Policy</strong>
+        <p>Your use of the site is also governed by our Privacy Policy, which outlines how we handle your data and use browser storage.</p>
+
+        <strong>8. Open Source and Intellectual Property</strong>
+        <p>The code for CrowdQuery.app is open source and made available under the [appropriate open-source license]. You are free to view, modify, and use the code in accordance with the terms of the open-source license.</p>
+
+        <p>However, the branding, design, logo, and any other non-code assets associated with CrowdQuery.app are the intellectual property of CrowdQuery.app and may not be used without permission.</p>
+
+        <strong>9. Changes to the Terms of Service</strong>
+        <p>We may update these terms from time to time. If we make significant changes, we will notify users by updating the date at the top of this page. Continued use of the platform after any changes signifies your acceptance of the updated terms.</p>
+
+        <strong>10. Governing Law</strong>
+        <p>These Terms of Service are governed by the laws of [Your Jurisdiction]. Any disputes related to these terms will be resolved in accordance with local laws.</p>
+
+        <strong>11. Contact Information</strong>
+        <p>If you have any questions or concerns about these Terms of Service, please contact us at [Your Contact Information].</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance? MudDialog { get; set; }
+
+    private void Close() => MudDialog!.Close();
+}

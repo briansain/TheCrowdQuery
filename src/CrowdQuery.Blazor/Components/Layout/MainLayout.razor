@@ -1,6 +1,5 @@
 ﻿@inherits LayoutComponentBase
 
-
 <MudThemeProvider Theme="primaryTheme" IsDarkMode="true" />
 @code{
     MudTheme primaryTheme = new MudTheme()
@@ -45,13 +44,13 @@
 }
 <MudPopoverProvider />
 <MudDialogProvider />
+<MudSnackbarProvider />
 
 <MudLayout>
     <NavMenu />
     <MudMainContent>
-        <div class="">
-            @Body
-        </div>
+        @Body
+        <FooterComponent></FooterComponent>
     </MudMainContent>
 </MudLayout>
 
@@ -86,3 +85,49 @@
         StateHasChanged();
     }
 }
+
+
+@*
+Privacy Policy for CrowdQuery.app
+Last updated: 2024-10-06
+
+Summary:
+No Personal Data Collected: We do not collect or store any personal data in this initial version of the site.
+Cookies: We use cookies to track whether a user has voted on a survey and to protect the site from malicious attacks.
+Future Changes: As we introduce user accounts, we may update this policy to reflect new data practices.
+Your Rights: You can contact us at any time regarding questions or concerns about your data.
+Full Privacy Policy:
+1. Introduction
+CrowdQuery.app (“we,” “our,” or “us”) respects your privacy. This Privacy Policy outlines how we collect, use, and protect your data when you visit or use CrowdQuery.app.
+
+2. Data We Collect
+At this time, we do not collect or store any personal information. You can use the website without providing any personal details.
+
+3. Use of Cookies and Local Storage
+CrowdQuery.app uses cookies or local storage for two main purposes:
+
+Voting Status: To track whether you have already voted on a specific survey and prevent multiple votes.
+Security: A Blazor-generated cookie is used to prevent malicious attacks and protect the integrity of the site.
+The cookies we use are not linked to any personally identifiable information.
+
+Cookies Used:
+Voting status cookie (to prevent multiple votes).
+Blazor security cookie (to prevent malicious attacks).
+4. Third-Party Services
+Currently, we do not share any data with third-party services. However, we may link to third-party services such as donation platforms (e.g., PayPal, Coinbase Wallet), which will have their own privacy policies.
+
+5. No User Accounts (For Now)
+In this initial version of CrowdQuery.app, we do not offer user accounts. Therefore, no account-related data is collected or stored. In future versions, we may introduce user accounts, and this Privacy Policy will be updated accordingly.
+
+6. Data Security
+Even though we do not collect personal data, we take the security of your interaction with our site seriously. The Blazor security cookie helps protect our site from malicious activities, ensuring a safe experience for all users.
+
+7. Changes to This Privacy Policy
+As we evolve and introduce new features (e.g., user accounts), this Privacy Policy may change. We will notify users of significant updates by updating the date at the top of this page. We encourage you to review this Privacy Policy periodically.
+
+8. Your Rights
+While we do not currently collect personal data, you have the right to contact us if you have any questions about how we handle cookies or any other concerns about your privacy.
+
+9. Contact Information
+For questions or concerns about this Privacy Policy, please contact us at [Your Contact Information].
+*@
