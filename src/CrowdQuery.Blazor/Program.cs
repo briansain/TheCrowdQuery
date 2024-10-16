@@ -9,21 +9,8 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfigura
     .ReadFrom.Configuration(hostingContext.Configuration)
     .Enrich.FromLogContext());
 
-builder.Configuration.AddJsonFile("appsettings.json", true);
-
-// Add services to the container.
-// builder.Services
-//     .AddMudServices()
-//     .AddRazorComponents()
-//     .AddInteractiveServerComponents();
-
 builder.Host.ConfigureServices((context, services) => {
-    // Log.Logger = new LoggerConfiguration()
-    //             .ReadFrom.Configuration(context.Configuration)
-    //             .Enrich.FromLogContext()
-    //             .CreateLogger();
     services
-        // .AddLogging(config => config.AddSerilog())
         .AddCrowdQueryAkka(context.Configuration, [ClusterConstants.MainNode, ClusterConstants.ProjectionNode])
         .AddMudServices()
         .AddRazorComponents()

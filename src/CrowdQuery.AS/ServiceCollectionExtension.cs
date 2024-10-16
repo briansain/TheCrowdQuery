@@ -24,7 +24,8 @@ public static class ServiceCollectionExtension
     public static IServiceCollection AddCrowdQueryAkka(this IServiceCollection services, IConfiguration configuration, string[] roles)
     {
         var config = new CrowdQueryAkkaConfiguration();
-        configuration.Bind("Akka", config);
+        config.ConnectionString = configuration["DBConnectionString"];
+        //configuration.Bind("Akka", config);
 
         var promptProjectionConfiguration = new Projections.PromptProjection.Configuration();
         configuration.Bind("CrowdQuery:PromptProjection", promptProjectionConfiguration);
